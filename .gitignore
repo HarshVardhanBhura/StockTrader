@@ -8,3 +8,6 @@ data/parquet/
 node_modules/
 dist/
 *.log
+
+# personal permission grants, not team config
+.claude/settings.local.json

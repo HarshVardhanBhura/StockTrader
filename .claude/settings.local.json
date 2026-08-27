@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Skill(update-config)",
-      "Skill(update-config:*)",
-      "Bash(ls -la .claude 2>/dev/null || echo \"no .claude dir\"; ls -la /c/Users/Harsh/.claude/settings.json 2>/dev/null || echo \"no user settings\")"
-    ]
-  }
-}
