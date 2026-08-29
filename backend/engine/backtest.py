@@ -20,6 +20,8 @@ import pandas as pd
 from ..brokers.base import Broker
 from ..costs.base import CostModel
 from ..costs.india import IndiaEquityTax
+from ..features import indicators as ind
+from ..sizing.risk_sizer import SizingConfig, size_position
 from ..strategies.base import Context, Signal, Strategy
 from .bar_view import BarView, build_panel
 from .decision_log import DecisionLog, DecisionRecord
@@ -49,6 +51,8 @@ class BacktestEngine:
         initial_capital: float,
         tax_model: IndiaEquityTax | None = None,
         max_cost_pct: float = 0.005,
+        sizing: SizingConfig | None = None,
+        atr_window: int = 14,
     ):
         self.full_panel = build_panel(bars)
         self.cost_model = cost_model
@@ -56,6 +60,8 @@ class BacktestEngine:
         self.initial_capital = initial_capital
         self.tax_model = tax_model or IndiaEquityTax()
         self.max_cost_pct = max_cost_pct
+        self.sizing = sizing or SizingConfig(max_cost_pct=max_cost_pct)
+        self.atr_window = atr_window
 
     def _trading_days(self, start: date, end: date) -> list[date]:
         idx = self.full_panel.opens.index
@@ -153,14 +159,7 @@ class BacktestEngine:
             )
 
         if sig.target_weight is None:
-            # Phase 3 hook: risk-based (ATR/stop) sizing plugs in here via
-            # backend.sizing.risk_sizer, using view.history() for ATR. Not
-            # needed by the Phase 2 integrity control (buy_and_hold), which
-            # always supplies target_weight directly.
-            return None, DecisionRecord(
-                **base, accepted=False,
-                reason="risk-based sizing not wired for this signal type",
-            )
+            return self._risk_sized_order(sig, view, ctx, base, price)
 
         shares = int((ctx.equity * sig.target_weight) // price)
         if shares < 1:
@@ -184,3 +183,45 @@ class BacktestEngine:
             reason=sig.reason, queued_on=sig.asof, target_weight=sig.target_weight,
         )
         return order, DecisionRecord(**base, accepted=True, reason=sig.reason)
+
+    def _risk_sized_order(
+        self, sig: Signal, view: BarView, ctx: Context, base: dict, price: float
+    ) -> tuple[Order | None, DecisionRecord]:
+        """ATR/stop-based sizing: the stop distance sets the size, then the
+        constraint set clips it. The full SizingDecision explanation is stored
+        on the decision record, so "why only N shares?" is answerable exactly
+        and for free."""
+        hist = view.history(sig.symbol, lookback=self.atr_window * 4)
+        if len(hist) < self.atr_window + 1:
+            return None, DecisionRecord(
+                **base, accepted=False,
+                reason=f"only {len(hist)} bars of history, need "
+                       f"{self.atr_window + 1} to compute ATR",
+            )
+        atr_series = ind.atr(hist["high"], hist["low"], hist["close"], self.atr_window)
+        atr = float(atr_series.iloc[-1])
+        if not atr > 0:
+            return None, DecisionRecord(
+                **base, accepted=False, reason="ATR is zero or undefined"
+            )
+
+        adv_shares = float(hist["volume"].tail(20).median())
+        decision = size_position(
+            symbol=sig.symbol, price=price, atr=atr, equity=ctx.equity,
+            cost_model=self.cost_model, available_cash=ctx.cash,
+            avg_daily_volume=adv_shares, config=self.sizing,
+        )
+        record_base = {**base, "sizing_explain": decision.explain()}
+
+        if not decision.accepted:
+            return None, DecisionRecord(
+                **record_base, accepted=False,
+                reason=decision.rejected_reason or "sizing produced no position",
+            )
+        order = Order(
+            symbol=sig.symbol, side="buy", shares=decision.shares,
+            reason=sig.reason, queued_on=sig.asof,
+        )
+        return order, DecisionRecord(
+            **record_base, accepted=True, reason=sig.reason
+        )
