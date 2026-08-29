@@ -100,12 +100,12 @@ def compute_metrics(
     total_slippage = sum(f.slippage for f in fills)
     total_tax = sum(t.tax for t in closed_trades)
 
+    # The equity curve is pre-tax: realized tax is recorded per closed trade
+    # but never deducted from cash during the run, since Indian capital-gains
+    # tax is settled at filing time, not per trade. So the after-tax figure
+    # is the terminal equity less all realized tax, annualised over the same
+    # horizon as the pre-tax curve.
     after_tax_end_equity = end_equity - total_tax
-    after_tax_cagr = _cagr(
-        pd.Series([start_equity, after_tax_end_equity], index=[0, len(equity) - 1 or 1])
-    ) if start_equity > 0 else 0.0
-    # Reuse the years elapsed from the pre-tax curve rather than a synthetic
-    # 2-point series with the wrong horizon.
     years = len(equity) / TRADING_DAYS_PER_YEAR if len(equity) else 0.0
     after_tax_cagr = (
         (after_tax_end_equity / start_equity) ** (1.0 / years) - 1.0

@@ -58,20 +58,22 @@ class BacktestEngine:
         self.max_cost_pct = max_cost_pct
 
     def _trading_days(self, start: date, end: date) -> list[date]:
-        all_dates: set[date] = set()
-        for df in self.full_panel.values():
-            mask = (df["date"] >= pd.Timestamp(start)) & (df["date"] <= pd.Timestamp(end))
-            all_dates.update(d.date() for d in df.loc[mask, "date"])
-        return sorted(all_dates)
+        idx = self.full_panel.opens.index
+        mask = (idx >= pd.Timestamp(start)) & (idx <= pd.Timestamp(end))
+        return [d.date() for d in idx[mask]]
 
     def _opens_on(self, asof: date) -> dict[str, float]:
-        ts = pd.Timestamp(asof)
-        out = {}
-        for sym, df in self.full_panel.items():
-            row = df.loc[df["date"] == ts]
-            if not row.empty:
-                out[sym] = float(row["open"].iloc[0])
-        return out
+        """Opening prices printed on exactly ``asof``.
+
+        NaN means the symbol had no print that day (halt/suspension), and is
+        omitted so the broker carries the order forward rather than filling
+        at a stale price.
+        """
+        try:
+            row = self.full_panel.opens.loc[pd.Timestamp(asof)]
+        except KeyError:
+            return {}
+        return {str(k): float(v) for k, v in row.items() if pd.notna(v)}
 
     def run(self, strategy: Strategy, start: date, end: date) -> BacktestResult:
         portfolio = Portfolio(cash=self.initial_capital, tax_model=self.tax_model)
@@ -87,7 +89,10 @@ class BacktestEngine:
             all_fills.extend(fills)
 
             view = BarView.as_of(self.full_panel, asof)
-            closes = view.all_last_closes()
+            # Mark to market against held positions only. Pulling closes for
+            # the whole universe every day was pure waste - the portfolio can
+            # only be valued on what it actually holds.
+            closes = view.closes_for(portfolio.positions)
             equity = portfolio.equity(closes)
             equity_points[asof] = equity
             exposure_points[asof] = portfolio.exposure(closes)
