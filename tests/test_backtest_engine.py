@@ -20,6 +20,18 @@ def two_symbol_bars(n=40, seed_a=1, seed_b=2):
     return pd.concat([a, b], ignore_index=True)
 
 
+def run_buy_and_hold_with(bars, strategy, capital=100_000.0, slippage=0.001):
+    """Run an already-constructed strategy through the engine."""
+    broker = BacktestBroker(COSTS, slippage_pct=slippage)
+    engine = BacktestEngine(bars, COSTS, broker, initial_capital=capital)
+    return engine.run(strategy, bars["date"].min().date(), bars["date"].max().date())
+
+
+def _view_for(bars):
+    from backend.engine.bar_view import BarView, build_panel
+    return BarView.as_of(build_panel(bars), bars["date"].max())
+
+
 def run_buy_and_hold(bars, capital=100_000.0, exit_date=None, slippage=0.001):
     broker = BacktestBroker(COSTS, slippage_pct=slippage)
     engine = BacktestEngine(bars, COSTS, broker, initial_capital=capital)
@@ -229,3 +241,65 @@ class TestExactReconciliation:
         assert result.final_cash == pytest.approx(cash, abs=0.05)
         for sym, n in shares.items():
             assert result.final_positions[sym].shares == n
+
+
+class TestBenchmarkNeverSilentlyStopsTrading:
+    """Guards a Phase 4 bug: an underfunded equal-weight basket had every
+    position correctly rejected by the cost floor, so 'buy and hold' bought
+    nothing and reported +0.00% for six consecutive years. A benchmark that
+    silently stops trading invalidates every comparison drawn against it,
+    and nothing errored - it just quietly flatlined."""
+
+    def _wide_bars(self, n_symbols=60, n=40):
+        return pd.concat(
+            [make_bars(symbol=f"S{i:02d}", n=n, start_price=500.0, seed=i)
+             for i in range(n_symbols)],
+            ignore_index=True,
+        )
+
+    def test_underfunded_basket_is_trimmed_not_abandoned(self):
+        bars = self._wide_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(60)], cost_model=COSTS)
+        result = run_buy_and_hold_with(bars, strat, capital=327_101.0)
+        assert result.final_positions, "benchmark bought nothing at all"
+        assert len(result.final_positions) < 60, "expected the basket to be trimmed"
+
+    def test_every_held_position_clears_the_cost_floor(self):
+        """The floor is a DECISION-TIME constraint, checked against today's
+        close; the fill happens at tomorrow's open, which nobody can know
+        when sizing. So realised cost can drift marginally past the budget
+        on an overnight move - a few basis points, not a broken floor.
+        What must never happen is a position landing far above it."""
+        bars = self._wide_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(60)], cost_model=COSTS)
+        result = run_buy_and_hold_with(bars, strat, capital=327_101.0)
+        realised = [
+            COSTS.breakeven_move_pct(f.fill_price, f.shares)
+            for f in result.fills if f.side == "buy"
+        ]
+        assert realised
+        assert max(realised) <= 0.0055, "realised cost drifted far past the floor"
+        assert sum(realised) / len(realised) <= 0.005, "average must respect the budget"
+
+    def test_well_funded_basket_is_not_trimmed(self):
+        bars = self._wide_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(60)], cost_model=COSTS)
+        result = run_buy_and_hold_with(bars, strat, capital=2_000_000.0)
+        assert len(result.final_positions) == 60
+
+    def test_trim_is_recorded_in_the_decision_log(self):
+        """The chatbot must be able to explain why fewer names were bought."""
+        bars = self._wide_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(60)], cost_model=COSTS)
+        result = run_buy_and_hold_with(bars, strat, capital=327_101.0)
+        recs = [r for r in result.decision_log.records if r.action == "buy"]
+        assert recs
+        assert recs[0].rule_outcomes["basket_trimmed_for_cost_floor"] is True
+        assert recs[0].rule_inputs["affordable_universe"] < 60
+
+    def test_without_a_cost_model_behaviour_is_unchanged(self):
+        """Opt-in: existing callers that pass no cost model keep the old
+        semantics rather than silently changing basket size."""
+        bars = self._wide_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(60)])
+        assert len(strat.affordable_symbols(1.0, _view_for(bars))) == 60
