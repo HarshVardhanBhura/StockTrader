@@ -243,6 +243,19 @@ def score_universe(
     # Cross-sectional ranks. The spread estimator is far more trustworthy as
     # an ordering than as a level, so rank-within-universe is the number to
     # act on; the absolute subscore is kept for continuity.
+    #
+    # A symbol that fails the history gate returns empty ``metrics``, so if
+    # EVERY symbol in this batch is history-starved, 'est_spread' never
+    # appears as a column at all (no row ever supplied it). Ranking is
+    # meaningless with zero scored symbols anyway, so short-circuit rather
+    # than index a column that may not exist.
+    if "est_spread" not in out.columns:
+        out["spread_rank"] = float("nan")
+        out["liquidity_rank"] = float("nan")
+        return out.sort_values(
+            ["tradable", "score"], ascending=[False, False]
+        ).reset_index(drop=True)
+
     scored = out["est_spread"].notna()
     out["spread_rank"] = pd.Series(dtype=float)
     out["liquidity_rank"] = pd.Series(dtype=float)

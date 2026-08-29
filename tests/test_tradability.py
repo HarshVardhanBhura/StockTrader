@@ -153,3 +153,30 @@ class TestSpreadCalibration:
             IndiaEquityDeliveryCosts(),
         )
         assert not d.accepted or d.shares > 0
+
+
+class TestScoreUniverseRobustness:
+    """Found while building Phase 2: score_universe crashed when every
+    symbol in the batch failed the history gate, because a history-starved
+    symbol returns empty metrics, so 'est_spread' never appears as a column
+    at all. A validation script hit this by scoring a too-short window."""
+
+    def test_all_symbols_failing_history_does_not_crash(self):
+        frames = [
+            make_bars(symbol=f"NEW{i}", n=10, seed=i) for i in range(3)
+        ]
+        out = score_universe(pd.concat(frames, ignore_index=True))
+        assert len(out) == 3
+        assert (~out["tradable"]).all()
+        assert (out["failed"] == "history").all()
+        assert out["spread_rank"].isna().all()
+
+    def test_mixed_batch_of_starved_and_healthy_symbols_still_ranks(self):
+        frames = [
+            make_bars(symbol="STARVED", n=10, seed=1),
+            make_bars(symbol="HEALTHY1", n=120, turnover=30_00_00_000.0, seed=2),
+            make_bars(symbol="HEALTHY2", n=120, turnover=60_00_00_000.0, seed=3),
+        ]
+        out = score_universe(pd.concat(frames, ignore_index=True))
+        assert out.loc[out["symbol"] == "STARVED", "spread_rank"].isna().all()
+        assert out.loc[out["symbol"] == "HEALTHY1", "spread_rank"].notna().all()
