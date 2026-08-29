@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import logging
+import time
 import zipfile
 from datetime import date, timedelta
 
@@ -40,6 +41,23 @@ _MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
 
 class NoDataForDate(Exception):
     """Raised for weekends, holidays, or a file NSE has not published."""
+
+
+def _parse_legacy_dates(series: pd.Series) -> pd.Series:
+    """Parse the legacy TIMESTAMP column.
+
+    NSE is not consistent here: most files use 4-digit years ("03-JUN-2024")
+    but some use 2-digit ("13-Jul-20"). A single hardcoded format raises and
+    silently drops the whole trading day - found in the 2015-2026 backfill,
+    where 2020-07-13 went missing with no data-level warning.
+    """
+    for fmt in ("%d-%b-%Y", "%d-%b-%y"):
+        try:
+            return pd.to_datetime(series, format=fmt)
+        except ValueError:
+            continue
+    # Last resort: let pandas infer per-value rather than lose the day.
+    return pd.to_datetime(series, format="mixed", dayfirst=True)
 
 
 def udiff_url(d: date) -> str:
@@ -109,7 +127,7 @@ def parse_legacy(csv_text: str) -> pd.DataFrame:
     df = df.loc[:, [c for c in df.columns if not str(c).startswith("Unnamed")]]
     df.columns = [str(c).strip() for c in df.columns]
     out = pd.DataFrame({
-        "date": pd.to_datetime(df["TIMESTAMP"], format="%d-%b-%Y").dt.date,
+        "date": _parse_legacy_dates(df["TIMESTAMP"]).dt.date,
         "symbol": df["SYMBOL"].astype(str).str.strip(),
         "series": df["SERIES"].astype(str).str.strip(),
         "open": pd.to_numeric(df["OPEN"], errors="coerce"),
@@ -125,16 +143,48 @@ def parse_legacy(csv_text: str) -> pd.DataFrame:
     return out.reset_index(drop=True)
 
 
-def fetch_day(d: date, session: requests.Session | None = None) -> pd.DataFrame:
-    """Download and parse one trading day into the canonical schema."""
+def fetch_day(
+    d: date,
+    session: requests.Session | None = None,
+    retries: int = 3,
+    backoff: float = 2.0,
+) -> pd.DataFrame:
+    """Download and parse one trading day into the canonical schema.
+
+    Retries transient network failures. A dropped connection is not evidence
+    that a trading day did not happen, and treating it as one leaves a silent
+    hole in the history - which is exactly what a single read timeout did to
+    2021-12-23 during the 2015-2026 backfill.
+    """
     session = session or make_session()
     url, fmt = url_for(d)
-    resp = session.get(url, timeout=30)
-    if resp.status_code != 200 or resp.content[:2] != b"PK":
-        raise NoDataForDate(f"{d} ({fmt}): HTTP {resp.status_code}")
-    text = _unzip_single(resp.content)
-    df = parse_udiff(text) if fmt == "udiff" else parse_legacy(text)
-    return df[CANONICAL_COLUMNS]
+
+    last_exc: Exception | None = None
+    for attempt in range(retries):
+        try:
+            resp = session.get(url, timeout=30)
+        except requests.RequestException as exc:
+            last_exc = exc
+            if attempt < retries - 1:
+                time.sleep(backoff * (attempt + 1))
+                continue
+            raise
+        if resp.status_code == 404:
+            # A genuine "no such file" - holiday or not yet published.
+            raise NoDataForDate(f"{d} ({fmt}): HTTP 404")
+        if resp.status_code != 200 or resp.content[:2] != b"PK":
+            last_exc = NoDataForDate(
+                f"{d} ({fmt}): HTTP {resp.status_code}"
+            )
+            if attempt < retries - 1:
+                time.sleep(backoff * (attempt + 1))
+                continue
+            raise last_exc
+        text = _unzip_single(resp.content)
+        df = parse_udiff(text) if fmt == "udiff" else parse_legacy(text)
+        return df[CANONICAL_COLUMNS]
+
+    raise last_exc or NoDataForDate(f"{d} ({fmt}): exhausted retries")
 
 
 def trading_days(start: date, end: date) -> list[date]:
