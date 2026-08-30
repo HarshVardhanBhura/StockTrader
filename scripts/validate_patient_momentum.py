@@ -61,15 +61,20 @@ def uni(tb):
 
 
 # --------------------------------------------------------------- benchmark
+# Uses the same continuous convention as the strategy arms: one portfolio
+# carried across windows, no forced annual liquidation.
+from backend.engine.portfolio import Portfolio  # noqa: E402
+bench_pf = Portfolio(cash=CAPITAL, tax_model=TAX)
 pieces, eq, bench_win = [], CAPITAL, []
 for w in windows:
     tr = bars[(bars["date"] >= pd.Timestamp(w.train_start)) & (bars["date"] <= pd.Timestamp(w.train_end))]
     syms = uni(tr)
-    d = bars[(bars["symbol"].isin(syms)) & (bars["date"] >= pd.Timestamp(w.test_start))
+    tradable = sorted(set(syms) | set(bench_pf.positions))
+    d = bars[(bars["symbol"].isin(tradable)) & (bars["date"] >= pd.Timestamp(w.test_start))
              & (bars["date"] <= pd.Timestamp(w.test_end))]
     res = BacktestEngine(d, COSTS, BacktestBroker(COSTS, 0.001), initial_capital=eq,
                          tax_model=TAX).run(BuyAndHold(symbols=syms, cost_model=COSTS),
-                                            w.test_start, w.test_end)
+                                            w.test_start, w.test_end, portfolio=bench_pf)
     c = res.equity_curve
     bench_win.append(float(c.iloc[-1] / c.iloc[0] - 1))
     pieces.append(c)
@@ -125,8 +130,8 @@ for label, override, removes in ARMS:
     tax = sum(w.test_result.metrics.total_tax for w in r.windows)
     holds = sum(1 for w in r.windows for x in w.test_result.decision_log.records
                 if x.action == "hold")
-    ltcg = sum(1 for w in r.windows for t in w.test_result.closed_trades
-               if t.holding_days >= 365)
+    closed = wf.final_portfolio.closed_trades if wf.final_portfolio else []
+    ltcg = sum(1 for t in closed if t.holding_days >= 365)
     rows.append({
         "arm": label, "removes": removes, "final": float(eqc.iloc[-1]), "cagr": cagr,
         "sharpe": r.oos_sharpe_annual, "max_dd": r.max_drawdown,
@@ -162,13 +167,13 @@ print("TAX BEHAVIOUR")
 print("=" * 100)
 full, notax = df.iloc[0], df[df["arm"].str.contains("tax-aware")].iloc[0]
 print(f"  deferrals triggered      : {int(full['deferrals'])}")
-if int(full["deferrals"]) == 0:
+if int(full["deferrals"]) == 0 and int(full["ltcg_trades"]) > 0:
     print()
-    print("  LIMITATION: the tax-aware exit is UNTESTABLE under this harness.")
-    print("  Each walk-forward test window is 252 trading days and starts flat,")
-    print("  so no position can reach the 365-day long-term boundary. The")
-    print("  feature is inert here by construction, not by choice - judging it")
-    print("  needs multi-year windows or positions carried across them.")
+    print("  The deferral never had to fire: positions already reach the")
+    print("  365-day boundary on their own at this rebalance cadence, so the")
+    print("  rule finds nothing to rescue. It is redundant here rather than")
+    print("  wrong - a faster-turnover variant is where it would earn its keep.")
+    print()
 print(f"  trades held past 365d    : {int(full['ltcg_trades'])} (full) vs "
       f"{int(notax['ltcg_trades'])} (without deferral)")
 print(f"  total tax paid           : Rs {full['tax']:,.0f} (full) vs "

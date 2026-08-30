@@ -85,8 +85,22 @@ class BacktestEngine:
             return {}
         return {str(k): float(v) for k, v in row.items() if pd.notna(v)}
 
-    def run(self, strategy: Strategy, start: date, end: date) -> BacktestResult:
-        portfolio = Portfolio(cash=self.initial_capital, tax_model=self.tax_model)
+    def run(
+        self, strategy: Strategy, start: date, end: date,
+        portfolio: Portfolio | None = None,
+    ) -> BacktestResult:
+        """Run the loop over [start, end].
+
+        ``portfolio`` lets a caller continue an existing account rather than
+        starting flat. Walk-forward uses this to carry positions across window
+        boundaries: liquidating everything at each boundary would charge exit
+        costs no real trader pays, realise gains early, and reset every
+        holding period - which made the long-term capital-gains threshold
+        unreachable and so untestable.
+        """
+        portfolio = portfolio or Portfolio(
+            cash=self.initial_capital, tax_model=self.tax_model
+        )
         decision_log = DecisionLog()
         all_fills: list[Fill] = []
         equity_points: dict[date, float] = {}

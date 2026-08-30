@@ -164,3 +164,82 @@ class TestGrid:
 
     def test_single_value_grid(self):
         assert expand_grid({"fast": [10]}) == [{"fast": 10}]
+
+
+class TestContinuousWalkForward:
+    """Carrying the portfolio across window boundaries.
+
+    Restarting flat each window charged exit costs no real trader pays,
+    realised gains early, and reset every holding period - which made the
+    365-day long-term capital-gains threshold unreachable, so the tax-aware
+    feature was inert by construction rather than by evidence.
+    """
+
+    def _setup(self, n=900):
+        import pandas as pd
+        from backend.costs.india import IndiaEquityDeliveryCosts
+        from backend.engine.walkforward import WalkForward
+        from backend.strategies.buy_and_hold import BuyAndHold
+        from tests.conftest import make_bars
+
+        bars = pd.concat(
+            [make_bars(symbol=f"C{i}", n=n, start_price=300.0, seed=i) for i in range(6)],
+            ignore_index=True,
+        )
+        costs = IndiaEquityDeliveryCosts()
+        dates = sorted(bars["date"].dt.date.unique())
+        wins = make_windows(dates, train_days=250, test_days=150, embargo_days=10)
+        wf = WalkForward(
+            bars, costs, 500_000.0,
+            strategy_factory=lambda **p: BuyAndHold(
+                symbols=[f"C{i}" for i in range(6)], cost_model=costs),
+        )
+        return wf, wins, bars
+
+    def test_positions_survive_a_window_boundary(self):
+        wf, wins, _ = self._setup()
+        r = wf.run(wins, {"unused": [0]}, verbose=False, continuous=True)
+        assert len(wins) >= 2
+        # After the first window the account should still hold stock rather
+        # than having been liquidated back to cash.
+        assert wf.final_portfolio is not None
+        assert wf.final_portfolio.positions
+
+    def test_continuous_mode_trades_less_than_restarting_flat(self):
+        """The whole point: no forced annual liquidation and rebuy."""
+        wf, wins, _ = self._setup()
+        cont = wf.run(wins, {"unused": [0]}, verbose=False, continuous=True)
+        flat = wf.run(wins, {"unused": [0]}, verbose=False, continuous=False)
+        cont_fills = sum(len(w.test_result.fills) for w in cont.windows)
+        flat_fills = sum(len(w.test_result.fills) for w in flat.windows)
+        assert cont_fills < flat_fills
+
+    def test_continuous_mode_pays_less_in_costs(self):
+        wf, wins, _ = self._setup()
+        cont = wf.run(wins, {"unused": [0]}, verbose=False, continuous=True)
+        flat = wf.run(wins, {"unused": [0]}, verbose=False, continuous=False)
+        c_cost = sum(w.test_result.metrics.total_costs for w in cont.windows)
+        f_cost = sum(w.test_result.metrics.total_costs for w in flat.windows)
+        assert c_cost < f_cost
+
+    def test_holding_periods_can_now_exceed_a_year(self):
+        """The specific limitation being fixed: a position must be able to
+        reach the 365-day boundary."""
+        wf, wins, _ = self._setup()
+        wf.run(wins, {"unused": [0]}, verbose=False, continuous=True)
+        pos = list(wf.final_portfolio.positions.values())
+        assert pos
+        held = max((wins[-1].test_end - p.entry_date).days for p in pos)
+        assert held > 365, f"longest holding only {held} days"
+
+    def test_equity_is_continuous_across_boundaries(self):
+        """No phantom jump where one window hands over to the next."""
+        wf, wins, _ = self._setup()
+        r = wf.run(wins, {"unused": [0]}, verbose=False, continuous=True)
+        rets = r.oos_equity.pct_change().dropna()
+        assert rets.abs().max() < 0.25
+
+    def test_no_leverage_survives_the_handover(self):
+        wf, wins, _ = self._setup()
+        wf.run(wins, {"unused": [0]}, verbose=False, continuous=True)
+        assert wf.final_portfolio.cash >= -0.01

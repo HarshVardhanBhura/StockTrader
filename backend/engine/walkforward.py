@@ -35,6 +35,7 @@ from ..costs.base import CostModel
 from ..costs.india import IndiaEquityTax
 from ..strategies.base import Strategy
 from .backtest import BacktestEngine, BacktestResult
+from .portfolio import Portfolio
 from .deflated_sharpe import (
     DeflatedSharpeResult,
     annualised_to_per_observation,
@@ -169,14 +170,15 @@ class WalkForward:
         return out
 
     def _run_one(
-        self, data: pd.DataFrame, params: dict, capital: float, start: date, end: date
+        self, data: pd.DataFrame, params: dict, capital: float, start: date, end: date,
+        portfolio: Portfolio | None = None,
     ) -> BacktestResult:
         broker = BacktestBroker(self.cost_model, slippage_pct=self.slippage_pct)
         engine = BacktestEngine(
             data, self.cost_model, broker, initial_capital=capital,
             tax_model=self.tax_model,
         )
-        return engine.run(self.strategy_factory(**params), start, end)
+        return engine.run(self.strategy_factory(**params), start, end, portfolio=portfolio)
 
     def run(
         self,
@@ -184,12 +186,24 @@ class WalkForward:
         param_grid: dict[str, list],
         warmup_days: int = 260,
         verbose: bool = True,
+        continuous: bool = True,
     ) -> WalkForwardResult:
+        """Roll through the windows.
+
+        ``continuous`` (the default) carries one portfolio across every test
+        window, so positions survive a parameter change instead of being
+        liquidated and rebought at each boundary. Set it False only to
+        reproduce the older restart-flat behaviour.
+        """
         registry = TrialRegistry()
         combos = expand_grid(param_grid)
         results: list[WindowResult] = []
         equity = self.initial_capital
         oos_pieces: list[pd.Series] = []
+        carried: Portfolio | None = (
+            Portfolio(cash=self.initial_capital, tax_model=self.tax_model)
+            if continuous else None
+        )
 
         for w in windows:
             # Universe chosen from TRAINING data only - selecting it over the
@@ -216,10 +230,17 @@ class WalkForward:
             # Test data carries a warmup tail before test_start so indicators
             # are warm on day one; the engine still only trades inside the
             # test window, and the warmup bars sit before the embargo gap.
+            #
+            # Symbols already held must stay in the slice even if they have
+            # dropped out of the new window's universe - otherwise the engine
+            # cannot price them and the strategy cannot sell them.
             warm_from = w.test_start - timedelta(days=int(warmup_days * 1.5))
-            test_data = self._slice(warm_from, w.test_end, symbols)
+            tradable = symbols
+            if carried is not None and carried.positions:
+                tradable = sorted(set(symbols) | set(carried.positions))
+            test_data = self._slice(warm_from, w.test_end, tradable)
             test_res = self._run_one(test_data, best_params, equity,
-                                     w.test_start, w.test_end)
+                                     w.test_start, w.test_end, portfolio=carried)
 
             eq = test_res.equity_curve
             if not eq.empty:
@@ -236,6 +257,7 @@ class WalkForward:
                       f"ret {results[-1].test_return:+7.2%}  "
                       f"equity Rs {equity:,.0f}   {best_params}")
 
+        self.final_portfolio = carried
         oos_equity = (
             pd.concat(oos_pieces).sort_index() if oos_pieces else pd.Series(dtype=float)
         )
