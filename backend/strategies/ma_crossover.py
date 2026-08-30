@@ -95,24 +95,33 @@ class MACrossover(Strategy):
         return signals
 
     def _cross_state(self, symbol: str, bars: BarView) -> dict | None:
-        hist = bars.history(symbol, lookback=self.slow * 3)
-        if len(hist) < self.slow + 2:
+        """Today's and yesterday's fast/slow MA values.
+
+        Reads through the Panel's causal indicator cache rather than
+        recomputing rolling means per symbol per day - the same values, but
+        computed once per backtest instead of once per simulated day.
+        """
+        fast_key, slow_key = f"sma{self.fast}", f"sma{self.slow}"
+        fast_fn = lambda df: ind.sma(df["close"], self.fast).to_numpy()  # noqa: E731
+        slow_fn = lambda df: ind.sma(df["close"], self.slow).to_numpy()  # noqa: E731
+
+        f0 = bars.indicator_at(symbol, fast_key, fast_fn)
+        s0 = bars.indicator_at(symbol, slow_key, slow_fn)
+        f1 = bars.indicator_at(symbol, fast_key, fast_fn, offset=1)
+        s1 = bars.indicator_at(symbol, slow_key, slow_fn, offset=1)
+        if None in (f0, s0, f1, s1) or not s0:
             return None
-        close = hist["close"]
-        fast_ma = ind.sma(close, self.fast)
-        slow_ma = ind.sma(close, self.slow)
-        f0, s0 = fast_ma.iloc[-1], slow_ma.iloc[-1]
-        f1, s1 = fast_ma.iloc[-2], slow_ma.iloc[-2]
-        if any(x != x for x in (f0, s0, f1, s1)):  # NaN check
+        close = bars.close(symbol)
+        if close is None:
             return None
         return {
             "fast_above_slow": bool(f0 > s0),
             "was_above": bool(f1 > s1),
-            "separation": float((f0 - s0) / s0) if s0 else 0.0,
+            "separation": float((f0 - s0) / s0),
             "inputs": {
-                f"ma{self.fast}": round(float(f0), 2),
-                f"ma{self.slow}": round(float(s0), 2),
-                "close": round(float(close.iloc[-1]), 2),
-                "separation_pct": round(float((f0 - s0) / s0 * 100), 2) if s0 else 0.0,
+                f"ma{self.fast}": round(f0, 2),
+                f"ma{self.slow}": round(s0, 2),
+                "close": round(close, 2),
+                "separation_pct": round((f0 - s0) / s0 * 100, 2),
             },
         }

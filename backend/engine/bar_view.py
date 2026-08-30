@@ -33,10 +33,37 @@ class Panel:
     trading_dates: np.ndarray              # sorted unique int64 date values
     opens: pd.DataFrame                    # date x symbol, NaN where no print
     closes_ffill: pd.DataFrame             # date x symbol, forward filled
+    _ind_cache: dict = field(default_factory=dict, compare=False, repr=False)
 
     @property
     def symbols(self) -> list[str]:
         return list(self.frames)
+
+    def indicator(self, symbol: str, key: str, compute) -> np.ndarray:
+        """Full-series values of a CAUSAL indicator, computed once and cached.
+
+        SAFETY CONTRACT: ``compute`` must be causal - element i of its output
+        may depend only on input rows 0..i. Rolling means, EMAs, RSI, ATR and
+        true range all satisfy this; anything centred, back-filled, or
+        reverse-looking does not.
+
+        Given causality, computing on the whole series and reading index i is
+        identical to computing on rows 0..i and reading the last element - so
+        the cache is a pure speed-up with no look-ahead. That equivalence is
+        asserted directly in tests/test_bar_view.py rather than assumed.
+
+        Why it matters: recomputing rolling windows per symbol per simulated
+        day made MACrossover ~10s per backtest, which put a Phase 4 parameter
+        sweep out of reach entirely.
+        """
+        ck = (symbol, key)
+        arr = self._ind_cache.get(ck)
+        if arr is None:
+            df = self.frames.get(symbol)
+            arr = (np.asarray(compute(df), dtype=float)
+                   if df is not None and not df.empty else np.empty(0))
+            self._ind_cache[ck] = arr
+        return arr
 
 
 def build_panel(bars: pd.DataFrame) -> Panel:
@@ -146,6 +173,25 @@ class BarView:
             if v is not None and pd.notna(v):
                 out[str(s)] = float(v)
         return out
+
+    def indicator_at(
+        self, symbol: str, key: str, compute, offset: int = 0
+    ) -> float | None:
+        """Value of a causal indicator at asof, or ``offset`` bars earlier.
+
+        Returns None when there is no such bar or the value is undefined
+        (e.g. inside a rolling window's warmup). See Panel.indicator for the
+        causality contract this relies on.
+        """
+        cut = self._cut(symbol)
+        idx = cut - 1 - offset
+        if idx < 0:
+            return None
+        arr = self._panel.indicator(symbol, key, compute)
+        if idx >= len(arr):
+            return None
+        v = arr[idx]
+        return None if not np.isfinite(v) else float(v)
 
     def traded_today(self, symbol: str) -> bool:
         """True only if ``symbol`` has a bar dated exactly ``asof`` (vs. an

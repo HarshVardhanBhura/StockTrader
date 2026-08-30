@@ -37,14 +37,13 @@ class TrailingStopBook:
         self, symbol: str, asof: date, view: BarView, entry_ref: float
     ) -> Signal | None:
         """Return a sell Signal if the trailing stop is breached, else None."""
-        hist = view.history(symbol, lookback=self.atr_window * 4)
-        if len(hist) < self.atr_window + 1:
-            return None
-        close = float(hist["close"].iloc[-1])
-        atr = float(
-            ind.atr(hist["high"], hist["low"], hist["close"], self.atr_window).iloc[-1]
+        close = view.close(symbol)
+        atr = view.indicator_at(
+            symbol, f"atr{self.atr_window}",
+            lambda df: ind.atr(df["high"], df["low"], df["close"],
+                               self.atr_window).to_numpy(),
         )
-        if not atr > 0:
+        if close is None or atr is None or not atr > 0:
             return None
 
         hwm = max(self._high_water.get(symbol, entry_ref), close)

@@ -109,18 +109,28 @@ class MeanReversion(Strategy):
         return signals
 
     def _state(self, symbol: str, bars: BarView) -> dict | None:
-        need = max(self.trend_window, self.bb_window, self.rsi_window) + 2
-        hist = bars.history(symbol, lookback=need * 2)
-        if len(hist) < need:
+        """Reads through the causal indicator cache (see Panel.indicator)."""
+        bb = self.bb_window, self.bb_std
+
+        def lower_fn(df):
+            return ind.bollinger(df["close"], *bb)[0].to_numpy()
+
+        def mid_fn(df):
+            return ind.bollinger(df["close"], *bb)[1].to_numpy()
+
+        c = bars.close(symbol)
+        lo = bars.indicator_at(symbol, f"bb_lo{bb}", lower_fn)
+        md = bars.indicator_at(symbol, f"bb_mid{bb}", mid_fn)
+        r = bars.indicator_at(
+            symbol, f"rsi{self.rsi_window}",
+            lambda df: ind.rsi(df["close"], self.rsi_window).to_numpy(),
+        )
+        tm = bars.indicator_at(
+            symbol, f"sma{self.trend_window}",
+            lambda df: ind.sma(df["close"], self.trend_window).to_numpy(),
+        )
+        if None in (c, lo, md, r, tm):
             return None
-        close = hist["close"]
-        lower, mid, upper = ind.bollinger(close, self.bb_window, self.bb_std)
-        rsi = ind.rsi(close, self.rsi_window)
-        trend_ma = ind.sma(close, self.trend_window)
-        vals = (close.iloc[-1], lower.iloc[-1], mid.iloc[-1], rsi.iloc[-1], trend_ma.iloc[-1])
-        if any(v != v for v in vals):  # NaN check
-            return None
-        c, lo, md, r, tm = (float(v) for v in vals)
         return {
             "close": c, "lower": lo, "mid": md, "rsi": r, "trend_ma": tm,
             "inputs": {
