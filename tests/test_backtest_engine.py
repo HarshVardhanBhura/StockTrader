@@ -223,7 +223,9 @@ class TestExactReconciliation:
         closes_day1 = bars.loc[bars["date"] == pd.Timestamp(day1)].set_index("symbol")["close"]
         opens_day2 = bars.loc[bars["date"] == pd.Timestamp(day2)].set_index("symbol")["open"]
 
-        weight = 0.5
+        # Mirrors BuyAndHold's default 1% cash buffer: a basket cannot target
+        # 100% of equity, because buy costs come out of the same cash.
+        weight = (1.0 - 0.01) / 2
         cash = capital
         shares = {}
         for sym in ("AAA", "BBB"):
@@ -303,3 +305,54 @@ class TestBenchmarkNeverSilentlyStopsTrading:
         bars = self._wide_bars()
         strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(60)])
         assert len(strat.affordable_symbols(1.0, _view_for(bars))) == 60
+
+
+class TestNoLeverage:
+    """A cash long-only account can never hold more stock than it has money
+    for. The post-mortem measured 175% average exposure, which is leverage:
+    each of N same-day signals was sized against the SAME ctx.cash, so they
+    individually 'fit' while collectively overdrawing the account. Nothing
+    errored - the portfolio just quietly went into debt and amplified losses."""
+
+    def _many_bars(self, n_symbols=30, n=60):
+        return pd.concat(
+            [make_bars(symbol=f"S{i:02d}", n=n, start_price=500.0, seed=i)
+             for i in range(n_symbols)],
+            ignore_index=True,
+        )
+
+    def test_cash_never_goes_negative(self):
+        bars = self._many_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(30)])
+        result = run_buy_and_hold_with(bars, strat, capital=200_000.0)
+        assert result.final_cash >= -0.01, f"account overdrawn: {result.final_cash}"
+
+    def test_exposure_never_exceeds_one_hundred_percent(self):
+        bars = self._many_bars()
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(30)])
+        result = run_buy_and_hold_with(bars, strat, capital=200_000.0)
+        assert result.exposure_curve.max() <= 1.001, (
+            f"leveraged to {result.exposure_curve.max():.1%}"
+        )
+
+    def test_total_committed_never_exceeds_starting_capital(self):
+        """Sum of every buy's cash outlay must fit inside the account."""
+        bars = self._many_bars()
+        capital = 200_000.0
+        strat = BuyAndHold(symbols=[f"S{i:02d}" for i in range(30)])
+        result = run_buy_and_hold_with(bars, strat, capital=capital)
+        spent = sum(-f.net_cash_flow for f in result.fills if f.side == "buy")
+        assert spent <= capital + 0.01
+
+    def test_risk_sized_signals_also_respect_the_shared_budget(self):
+        """The ATR-sizing path shares the same budget as the weight path."""
+        from backend.strategies.ma_crossover import MACrossover
+        bars = self._many_bars(n_symbols=30, n=200)
+        broker = BacktestBroker(COSTS, slippage_pct=0.001)
+        engine = BacktestEngine(bars, COSTS, broker, initial_capital=150_000.0)
+        result = engine.run(
+            MACrossover(fast=5, slow=20, max_positions=30),
+            bars["date"].min().date(), bars["date"].max().date(),
+        )
+        assert result.final_cash >= -0.01
+        assert result.exposure_curve.max() <= 1.001

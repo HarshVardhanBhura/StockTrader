@@ -20,5 +20,13 @@ class Broker(ABC):
         """Accept an order generated from day t's close; it settles later."""
 
     @abstractmethod
-    def settle(self, asof: date, open_prices: dict[str, float]) -> list[Fill]:
-        """Fill every order queued as of a prior day, at today's open."""
+    def settle(
+        self, asof: date, open_prices: dict[str, float],
+        available_cash: float | None = None,
+    ) -> list[Fill]:
+        """Fill orders queued on a prior day, at today's open.
+
+        ``available_cash`` is settled cash on hand. A broker cannot fill a buy
+        the account cannot pay for, so orders exceeding it are rejected rather
+        than silently creating leverage.
+        """

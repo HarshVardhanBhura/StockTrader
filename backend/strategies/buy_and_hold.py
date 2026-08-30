@@ -37,11 +37,17 @@ class BuyAndHold(Strategy):
         exit_date: date | None = None,
         cost_model: CostModel | None = None,
         max_cost_pct: float = 0.005,
+        cash_buffer: float = 0.01,
     ):
         self.symbols = symbols
         self.exit_date = exit_date
         self.cost_model = cost_model
         self.max_cost_pct = max_cost_pct
+        # Targeting a full 100% of equity is not actually investable: buy-side
+        # costs and an adverse overnight gap both have to come out of the same
+        # cash, so the last name in the basket gets squeezed. Hold a little
+        # back.
+        self.cash_buffer = cash_buffer
         self._bought = False
         self._sold = False
 
@@ -75,8 +81,9 @@ class BuyAndHold(Strategy):
             return signals
 
         if not self._bought:
-            tradable = self.affordable_symbols(ctx.equity, bars)
-            weight = 1.0 / len(tradable) if tradable else 0.0
+            investable = ctx.equity * (1.0 - self.cash_buffer)
+            tradable = self.affordable_symbols(investable, bars)
+            weight = (1.0 - self.cash_buffer) / len(tradable) if tradable else 0.0
             for symbol in tradable:
                 signals.append(Signal(
                     symbol=symbol, asof=asof, action="buy",

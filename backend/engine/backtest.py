@@ -53,6 +53,7 @@ class BacktestEngine:
         max_cost_pct: float = 0.005,
         sizing: SizingConfig | None = None,
         atr_window: int = 14,
+        slippage_allowance: float = 0.002,
     ):
         self.full_panel = build_panel(bars)
         self.cost_model = cost_model
@@ -62,6 +63,9 @@ class BacktestEngine:
         self.max_cost_pct = max_cost_pct
         self.sizing = sizing or SizingConfig(max_cost_pct=max_cost_pct)
         self.atr_window = atr_window
+        # Headroom when estimating tomorrow's fill price from today's close,
+        # so the cash budget is not overrun by an adverse overnight move.
+        self.slippage_allowance = slippage_allowance
 
     def _trading_days(self, start: date, end: date) -> list[date]:
         idx = self.full_panel.opens.index
@@ -89,7 +93,9 @@ class BacktestEngine:
         exposure_points: dict[date, float] = {}
 
         for asof in self._trading_days(start, end):
-            fills = self.broker.settle(asof, self._opens_on(asof))
+            fills = self.broker.settle(
+                asof, self._opens_on(asof), available_cash=portfolio.cash
+            )
             for f in fills:
                 portfolio.apply_fill(f)
             all_fills.extend(fills)
@@ -107,11 +113,22 @@ class BacktestEngine:
                 asof=asof, equity=equity, cash=portfolio.cash,
                 positions=dict(portfolio.positions),
             )
+            # Cash is a shared budget across all of today's orders. Sizing each
+            # signal against the SAME ctx.cash independently lets N orders each
+            # "fit" while collectively overdrawing the account - which produced
+            # 175% exposure (i.e. leverage) in a long-only cash portfolio.
+            # Sells free budget only after they settle tomorrow, so they do not
+            # add to it here.
+            budget = portfolio.cash
             for sig in strategy.generate_signals(asof, view, ctx):
-                order, record = self._to_order(sig, view, ctx, strategy.name)
+                order, record = self._to_order(
+                    sig, view, ctx, strategy.name, budget
+                )
                 decision_log.add(record)
                 if order is not None:
                     self.broker.queue_order(order)
+                    if order.side == "buy":
+                        budget -= self._estimated_outlay(order, view)
 
         equity_curve = pd.Series(equity_points).sort_index()
         exposure_curve = pd.Series(exposure_points).sort_index()
@@ -130,8 +147,19 @@ class BacktestEngine:
             final_cash=portfolio.cash,
         )
 
+    def _estimated_outlay(self, order: Order, view: BarView) -> float:
+        """Cash an order is expected to consume once it fills tomorrow.
+
+        Uses today's close as the best available estimate of tomorrow's fill
+        price, plus a slippage allowance and the buy-side costs.
+        """
+        price = view.close(order.symbol) or 0.0
+        gross = price * order.shares * (1.0 + self.slippage_allowance)
+        return gross + self.cost_model.buy_costs(price, order.shares).total
+
     def _to_order(
-        self, sig: Signal, view: BarView, ctx: Context, strategy_name: str
+        self, sig: Signal, view: BarView, ctx: Context, strategy_name: str,
+        budget: float | None = None,
     ) -> tuple[Order | None, DecisionRecord]:
         base = dict(
             asof=sig.asof, symbol=sig.symbol, action=sig.action,
@@ -152,6 +180,7 @@ class BacktestEngine:
             return order, DecisionRecord(**base, accepted=True, reason=sig.reason)
 
         # buy
+        cash_available = ctx.cash if budget is None else budget
         price = view.close(sig.symbol)
         if price is None or price <= 0:
             return None, DecisionRecord(
@@ -159,9 +188,12 @@ class BacktestEngine:
             )
 
         if sig.target_weight is None:
-            return self._risk_sized_order(sig, view, ctx, base, price)
+            return self._risk_sized_order(sig, view, ctx, base, price, cash_available)
 
-        shares = int((ctx.equity * sig.target_weight) // price)
+        target_shares = int((ctx.equity * sig.target_weight) // price)
+        # Never commit more cash than remains unspent today.
+        affordable = int(cash_available // (price * (1.0 + self.slippage_allowance)))
+        shares = min(target_shares, max(affordable, 0))
         if shares < 1:
             return None, DecisionRecord(
                 **base, accepted=False,
@@ -185,7 +217,8 @@ class BacktestEngine:
         return order, DecisionRecord(**base, accepted=True, reason=sig.reason)
 
     def _risk_sized_order(
-        self, sig: Signal, view: BarView, ctx: Context, base: dict, price: float
+        self, sig: Signal, view: BarView, ctx: Context, base: dict, price: float,
+        cash_available: float | None = None,
     ) -> tuple[Order | None, DecisionRecord]:
         """ATR/stop-based sizing: the stop distance sets the size, then the
         constraint set clips it. The full SizingDecision explanation is stored
@@ -208,7 +241,8 @@ class BacktestEngine:
         adv_shares = float(hist["volume"].tail(20).median())
         decision = size_position(
             symbol=sig.symbol, price=price, atr=atr, equity=ctx.equity,
-            cost_model=self.cost_model, available_cash=ctx.cash,
+            cost_model=self.cost_model,
+            available_cash=ctx.cash if cash_available is None else cash_available,
             avg_daily_volume=adv_shares, config=self.sizing,
         )
         record_base = {**base, "sizing_explain": decision.explain()}

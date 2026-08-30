@@ -1,13 +1,27 @@
 """Corporate actions, inferred from the bhavcopy itself.
 
-NSE publishes ``PREVCLOSE`` already adjusted for splits and bonuses, while
-``CLOSE`` is the raw traded price. Comparing yesterday's raw close against
-today's adjusted prev_close therefore reveals the action ratio directly:
+NSE is INCONSISTENT about whether ``PREVCLOSE`` is restated onto the new
+price scale after a split or bonus, so two independent detectors are needed.
+Relying on either alone silently leaves phantom crashes in the data.
+
+**Detector 1 - restated prev_close.** When NSE does restate it, comparing
+yesterday's raw close against today's prev_close reveals the ratio directly:
 
     ratio = close[t-1] / prev_close[t]
 
-A 1:5 split shows up as ratio == 5. This removes the need for a separate
-corporate-actions feed.
+A 1:5 split shows up as ratio == 5. VERTOZ (2024-07-08, 20:1) was caught
+this way.
+
+**Detector 2 - implausible single-day move.** When NSE does NOT restate,
+detector 1 sees ratio == 1 and finds nothing, leaving an apparent -50% day.
+HDFCBANK's 1:1 bonus (ex-date 2025-08-26, close 1964 -> 973, prev_close
+reported as an unadjusted 1964.1) slipped through exactly this way.
+
+The second detector leans on an India-specific fact: NSE circuit limits cap
+a stock at 2%, 5%, 10% or 20% in a single session, so a move beyond ~25% in
+an ordinary equity is not a price move at all - it is a corporate action.
+
+    ratio = prev_close[t] / close[t]
 
 Adjustment is applied at READ time from raw bars plus this ratio table.
 Storing adjusted prices instead would silently corrupt every historical
@@ -25,6 +39,10 @@ import pandas as pd
 # treating an ordinary gap as an action.
 MIN_RATIO_DEVIATION = 0.02
 MAX_PLAUSIBLE_RATIO = 1000.0
+
+# NSE circuit bands top out at 20%, so a same-day move past this cannot be a
+# price move. Set above 20% to leave room for F&O names whose bands flex.
+MAX_PLAUSIBLE_DAILY_MOVE = 0.25
 
 
 @dataclass(frozen=True)
@@ -47,13 +65,30 @@ def infer_actions(bars: pd.DataFrame) -> list[CorporateAction]:
         return actions
     for symbol, grp in bars.sort_values(["symbol", "date"]).groupby("symbol"):
         prev_raw_close = grp["close"].shift(1)
-        ratio = prev_raw_close / grp["prev_close"]
-        for dt, r in zip(grp["date"], ratio):
-            if pd.isna(r) or r <= 0 or r > MAX_PLAUSIBLE_RATIO:
-                continue
-            if abs(r - 1.0) > MIN_RATIO_DEVIATION:
+
+        # Detector 1: NSE restated prev_close onto the new scale.
+        restated = prev_raw_close / grp["prev_close"]
+        # Detector 2: NSE did not restate, leaving an impossible same-day move.
+        implied_move = grp["close"] / grp["prev_close"] - 1.0
+        unrestated = grp["prev_close"] / grp["close"]
+
+        for dt, r1, move, r2 in zip(grp["date"], restated, implied_move, unrestated):
+            ratio = None
+            restated_hit = (
+                pd.notna(r1) and 0 < r1 <= MAX_PLAUSIBLE_RATIO
+                and abs(r1 - 1.0) > MIN_RATIO_DEVIATION
+            )
+            impossible_move = (
+                pd.notna(move) and abs(move) > MAX_PLAUSIBLE_DAILY_MOVE
+                and pd.notna(r2) and 0 < r2 <= MAX_PLAUSIBLE_RATIO
+            )
+            if restated_hit:
+                ratio = float(r1)
+            elif impossible_move:
+                ratio = float(r2)
+            if ratio is not None:
                 actions.append(
-                    CorporateAction(str(symbol), pd.Timestamp(dt), float(r))
+                    CorporateAction(str(symbol), pd.Timestamp(dt), ratio)
                 )
     return actions
 
