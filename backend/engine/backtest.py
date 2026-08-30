@@ -167,6 +167,12 @@ class BacktestEngine:
             rule_outcomes=sig.rule_outcomes, sizing_explain=None,
         )
 
+        if sig.action == "hold":
+            # A deliberate decision NOT to act, which still belongs in the
+            # record: "why didn't you sell this?" is exactly the kind of
+            # question the decision log exists to answer.
+            return None, DecisionRecord(**base, accepted=True, reason=sig.reason)
+
         if sig.action == "sell":
             pos = ctx.positions.get(sig.symbol)
             if pos is None:
