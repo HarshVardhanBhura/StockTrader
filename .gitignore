@@ -11,3 +11,6 @@ dist/
 
 # personal permission grants, not team config
 .claude/settings.local.json
+
+# paper trading state is a live record, not a build artifact
+!data/paper/

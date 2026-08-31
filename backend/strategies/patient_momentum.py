@@ -88,6 +88,25 @@ class PatientMomentum(Strategy):
         )
         self._day_count = 0
 
+    # ------------------------------------------------- persistence hooks
+    def get_state(self) -> dict:
+        """State that must survive between paper-trading runs.
+
+        Without the rebalance clock, every daily run would look like day one
+        and the strategy would rebalance every single session - turning a
+        quarterly strategy into a daily one purely because the process
+        restarted.
+        """
+        return {"day_count": self._day_count,
+                "high_water": dict(self.stops._high_water) if self.stops else {}}
+
+    def load_state(self, state: dict) -> None:
+        if not state:
+            return
+        self._day_count = int(state.get("day_count", 0))
+        if self.stops is not None:
+            self.stops._high_water = dict(state.get("high_water", {}))
+
     # ------------------------------------------------------------ ranking
     def _score(self, symbol: str, bars: BarView) -> tuple[float, float, float] | None:
         """(risk-adjusted score, raw momentum, annualised vol) or None."""

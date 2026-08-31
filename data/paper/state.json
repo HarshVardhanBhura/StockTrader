@@ -1,0 +1,451 @@
+{
+  "started": "2026-08-31",
+  "capital": 500000.0,
+  "cash": 500000.0,
+  "positions": {},
+  "pending": [
+    {
+      "symbol": "MCX",
+      "side": "buy",
+      "shares": 6,
+      "reason": "rank 1 of 60, momentum +89.6% at 36% vol (risk-adjusted +2.51)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.04640028022336705
+    },
+    {
+      "symbol": "VEDL",
+      "side": "buy",
+      "shares": 85,
+      "reason": "rank 2 of 60, momentum +77.4% at 34% vol (risk-adjusted +2.30)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.04926816712558198
+    },
+    {
+      "symbol": "NATIONALUM",
+      "side": "buy",
+      "shares": 48,
+      "reason": "rank 3 of 60, momentum +97.6% at 43% vol (risk-adjusted +2.26)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.038335977136938704
+    },
+    {
+      "symbol": "SHRIRAMFIN",
+      "side": "buy",
+      "shares": 24,
+      "reason": "rank 4 of 60, momentum +69.5% at 32% vol (risk-adjusted +2.19)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.05221704637458284
+    },
+    {
+      "symbol": "BSE",
+      "side": "buy",
+      "shares": 8,
+      "reason": "rank 5 of 60, momentum +64.2% at 30% vol (risk-adjusted +2.17)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.056078708130990175
+    },
+    {
+      "symbol": "EICHERMOT",
+      "side": "buy",
+      "shares": 5,
+      "reason": "rank 6 of 60, momentum +36.9% at 20% vol (risk-adjusted +1.81)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.08114944632187598
+    },
+    {
+      "symbol": "ADANIPOWER",
+      "side": "buy",
+      "shares": 151,
+      "reason": "rank 7 of 60, momentum +46.0% at 26% vol (risk-adjusted +1.79)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.0644740523946406
+    },
+    {
+      "symbol": "SBIN",
+      "side": "buy",
+      "shares": 44,
+      "reason": "rank 8 of 60, momentum +31.4% at 18% vol (risk-adjusted +1.76)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.09330114462794721
+    },
+    {
+      "symbol": "HINDALCO",
+      "side": "buy",
+      "shares": 30,
+      "reason": "rank 9 of 60, momentum +45.4% at 26% vol (risk-adjusted +1.76)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.06424923395582673
+    },
+    {
+      "symbol": "TITAN",
+      "side": "buy",
+      "shares": 8,
+      "reason": "rank 10 of 60, momentum +34.1% at 20% vol (risk-adjusted +1.71)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.08321047495126566
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "side": "buy",
+      "shares": 33,
+      "reason": "rank 11 of 60, momentum +22.0% at 13% vol (risk-adjusted +1.69)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.12719943453456167
+    },
+    {
+      "symbol": "NETWEB",
+      "side": "buy",
+      "shares": 2,
+      "reason": "rank 12 of 60, momentum +93.2% at 57% vol (risk-adjusted +1.63)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.029022089444515602
+    },
+    {
+      "symbol": "BAJAJ-AUTO",
+      "side": "buy",
+      "shares": 3,
+      "reason": "rank 13 of 60, momentum +31.6% at 22% vol (risk-adjusted +1.44)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.07561662885355505
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "side": "buy",
+      "shares": 24,
+      "reason": "rank 14 of 60, momentum +29.0% at 20% vol (risk-adjusted +1.44)",
+      "queued_on": "2026-08-28",
+      "target_weight": 0.08212980819012933
+    }
+  ],
+  "strategy_state": {
+    "day_count": 1,
+    "high_water": {}
+  },
+  "equity_history": [
+    {
+      "date": "2026-08-28",
+      "equity": 500000.0,
+      "cash": 500000.0,
+      "n_positions": 0
+    }
+  ],
+  "trade_log": [],
+  "decision_log": [
+    {
+      "date": "2026-08-28",
+      "symbol": "MCX",
+      "action": "buy",
+      "reason": "rank 1 of 60, momentum +89.6% at 36% vol (risk-adjusted +2.51)",
+      "rule_inputs": {
+        "rank": 1,
+        "universe_ranked": 60,
+        "momentum": 0.8956,
+        "annualised_vol": 0.3575,
+        "risk_adjusted_score": 2.5051,
+        "target_weight": 0.0464
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 6
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "VEDL",
+      "action": "buy",
+      "reason": "rank 2 of 60, momentum +77.4% at 34% vol (risk-adjusted +2.30)",
+      "rule_inputs": {
+        "rank": 2,
+        "universe_ranked": 60,
+        "momentum": 0.7739,
+        "annualised_vol": 0.3367,
+        "risk_adjusted_score": 2.2985,
+        "target_weight": 0.0493
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 85
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "NATIONALUM",
+      "action": "buy",
+      "reason": "rank 3 of 60, momentum +97.6% at 43% vol (risk-adjusted +2.26)",
+      "rule_inputs": {
+        "rank": 3,
+        "universe_ranked": 60,
+        "momentum": 0.9759,
+        "annualised_vol": 0.4327,
+        "risk_adjusted_score": 2.2552,
+        "target_weight": 0.0383
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 48
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "SHRIRAMFIN",
+      "action": "buy",
+      "reason": "rank 4 of 60, momentum +69.5% at 32% vol (risk-adjusted +2.19)",
+      "rule_inputs": {
+        "rank": 4,
+        "universe_ranked": 60,
+        "momentum": 0.6945,
+        "annualised_vol": 0.3177,
+        "risk_adjusted_score": 2.1861,
+        "target_weight": 0.0522
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 24
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BSE",
+      "action": "buy",
+      "reason": "rank 5 of 60, momentum +64.2% at 30% vol (risk-adjusted +2.17)",
+      "rule_inputs": {
+        "rank": 5,
+        "universe_ranked": 60,
+        "momentum": 0.6422,
+        "annualised_vol": 0.2958,
+        "risk_adjusted_score": 2.1711,
+        "target_weight": 0.0561
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 8
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "EICHERMOT",
+      "action": "buy",
+      "reason": "rank 6 of 60, momentum +36.9% at 20% vol (risk-adjusted +1.81)",
+      "rule_inputs": {
+        "rank": 6,
+        "universe_ranked": 60,
+        "momentum": 0.3691,
+        "annualised_vol": 0.2044,
+        "risk_adjusted_score": 1.8053,
+        "target_weight": 0.0811
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 5
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ADANIPOWER",
+      "action": "buy",
+      "reason": "rank 7 of 60, momentum +46.0% at 26% vol (risk-adjusted +1.79)",
+      "rule_inputs": {
+        "rank": 7,
+        "universe_ranked": 60,
+        "momentum": 0.4605,
+        "annualised_vol": 0.2573,
+        "risk_adjusted_score": 1.7897,
+        "target_weight": 0.0645
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 151
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "SBIN",
+      "action": "buy",
+      "reason": "rank 8 of 60, momentum +31.4% at 18% vol (risk-adjusted +1.76)",
+      "rule_inputs": {
+        "rank": 8,
+        "universe_ranked": 60,
+        "momentum": 0.3136,
+        "annualised_vol": 0.1778,
+        "risk_adjusted_score": 1.7639,
+        "target_weight": 0.0933
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 44
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "HINDALCO",
+      "action": "buy",
+      "reason": "rank 9 of 60, momentum +45.4% at 26% vol (risk-adjusted +1.76)",
+      "rule_inputs": {
+        "rank": 9,
+        "universe_ranked": 60,
+        "momentum": 0.4542,
+        "annualised_vol": 0.2582,
+        "risk_adjusted_score": 1.7589,
+        "target_weight": 0.0642
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 30
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "TITAN",
+      "action": "buy",
+      "reason": "rank 10 of 60, momentum +34.1% at 20% vol (risk-adjusted +1.71)",
+      "rule_inputs": {
+        "rank": 10,
+        "universe_ranked": 60,
+        "momentum": 0.3411,
+        "annualised_vol": 0.1994,
+        "risk_adjusted_score": 1.7112,
+        "target_weight": 0.0832
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 8
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "SUNPHARMA",
+      "action": "buy",
+      "reason": "rank 11 of 60, momentum +22.0% at 13% vol (risk-adjusted +1.69)",
+      "rule_inputs": {
+        "rank": 11,
+        "universe_ranked": 60,
+        "momentum": 0.22,
+        "annualised_vol": 0.1304,
+        "risk_adjusted_score": 1.6871,
+        "target_weight": 0.1272
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 33
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "NETWEB",
+      "action": "buy",
+      "reason": "rank 12 of 60, momentum +93.2% at 57% vol (risk-adjusted +1.63)",
+      "rule_inputs": {
+        "rank": 12,
+        "universe_ranked": 60,
+        "momentum": 0.9319,
+        "annualised_vol": 0.5716,
+        "risk_adjusted_score": 1.6303,
+        "target_weight": 0.029
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 2
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BAJAJ-AUTO",
+      "action": "buy",
+      "reason": "rank 13 of 60, momentum +31.6% at 22% vol (risk-adjusted +1.44)",
+      "rule_inputs": {
+        "rank": 13,
+        "universe_ranked": 60,
+        "momentum": 0.3164,
+        "annualised_vol": 0.2194,
+        "risk_adjusted_score": 1.4421,
+        "target_weight": 0.0756
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 3
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ADANIPORTS",
+      "action": "buy",
+      "reason": "rank 14 of 60, momentum +29.0% at 20% vol (risk-adjusted +1.44)",
+      "rule_inputs": {
+        "rank": 14,
+        "universe_ranked": 60,
+        "momentum": 0.29,
+        "annualised_vol": 0.202,
+        "risk_adjusted_score": 1.4359,
+        "target_weight": 0.0821
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 24
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "POWERINDIA",
+      "action": "buy",
+      "reason": "rank 15 of 60, momentum +62.0% at 44% vol (risk-adjusted +1.40)",
+      "rule_inputs": {
+        "rank": 15,
+        "universe_ranked": 60,
+        "momentum": 0.6204,
+        "annualised_vol": 0.4442,
+        "risk_adjusted_score": 1.3966,
+        "target_weight": 0.0373
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "absolute_momentum_positive": true,
+        "regime_risk_on": true
+      },
+      "accepted": false,
+      "why": "rounds to 0 shares at Rs 33,330.00"
+    }
+  ],
+  "last_run": "2026-08-28"
+}

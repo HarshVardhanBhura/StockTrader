@@ -180,3 +180,45 @@ class TestScoreUniverseRobustness:
         out = score_universe(pd.concat(frames, ignore_index=True))
         assert out.loc[out["symbol"] == "STARVED", "spread_rank"].isna().all()
         assert out.loc[out["symbol"] == "HEALTHY1", "spread_rank"].notna().all()
+
+
+class TestInstrumentFilters:
+    """The EQ series carries 349 ETFs alongside 2,344 company equities. They
+    pass every liquidity screen, and the first paper run ranked SILVERBEES
+    first and GOLDBEES third - two of fifteen slots in an equity strategy,
+    arriving by accident rather than by decision."""
+
+    def test_company_equity_is_recognised(self):
+        from backend.tradability.filters import is_equity
+        assert is_equity("INE002A01018")   # RELIANCE
+        assert is_equity("INE062A01020")   # SBIN
+
+    def test_etfs_are_excluded(self):
+        from backend.tradability.filters import is_equity
+        assert not is_equity("INF204KB17I5")  # GOLDBEES
+        assert not is_equity("INF204KC1402")  # SILVERBEES
+        assert not is_equity("INF204KB14I2")  # NIFTYBEES
+
+    def test_government_securities_are_excluded(self):
+        from backend.tradability.filters import is_equity
+        assert not is_equity("IN0020200104")  # sovereign gold bond
+
+    def test_missing_isin_is_not_an_equity(self):
+        from backend.tradability.filters import is_equity
+        assert not is_equity(None)
+        assert not is_equity("")
+
+    def test_classify_names_each_kind(self):
+        from backend.tradability.filters import classify
+        assert classify("INE002A01018") == "equity"
+        assert classify("INF204KB17I5") == "fund_or_etf"
+        assert classify("IN0020200104") == "government_security"
+
+    def test_equities_only_filters_a_frame(self):
+        from backend.tradability.filters import equities_only
+        df = pd.concat([
+            make_bars(symbol="RELIANCE", n=5).assign(isin="INE002A01018"),
+            make_bars(symbol="GOLDBEES", n=5).assign(isin="INF204KB17I5"),
+        ], ignore_index=True)
+        out = equities_only(df)
+        assert set(out["symbol"]) == {"RELIANCE"}
