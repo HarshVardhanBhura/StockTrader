@@ -107,3 +107,16 @@ class BacktestBroker:
     @property
     def pending_count(self) -> int:
         return len(self._pending)
+
+    @property
+    def pending_symbols(self) -> set:
+        """Symbols with an order already awaiting a fill.
+
+        The engine consults this before queueing anything new. Without it, an
+        order that cannot fill - because the symbol did not trade that day -
+        stays pending while the strategy still sees the position unchanged,
+        so the next rebalance signals the same exit again. Both then fill,
+        and the second attempts to sell shares that are already gone. In live
+        trading that is a double-sell.
+        """
+        return {o.symbol for o in self._pending}

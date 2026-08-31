@@ -134,13 +134,27 @@ class BacktestEngine:
             # Sells free budget only after they settle tomorrow, so they do not
             # add to it here.
             budget = portfolio.cash
+            in_flight = getattr(self.broker, "pending_symbols", set())
             for sig in strategy.generate_signals(asof, view, ctx):
+                if sig.symbol in in_flight:
+                    # An order for this symbol is still awaiting a fill. The
+                    # strategy cannot see that, so it would re-signal the same
+                    # exit and end up selling the position twice.
+                    decision_log.add(DecisionRecord(
+                        asof=sig.asof, symbol=sig.symbol, action=sig.action,
+                        strategy=strategy.name, rule_inputs=sig.rule_inputs,
+                        rule_outcomes=sig.rule_outcomes, sizing_explain=None,
+                        accepted=False,
+                        reason="an order for this symbol is already pending",
+                    ))
+                    continue
                 order, record = self._to_order(
                     sig, view, ctx, strategy.name, budget
                 )
                 decision_log.add(record)
                 if order is not None:
                     self.broker.queue_order(order)
+                    in_flight.add(order.symbol)
                     if order.side == "buy":
                         budget -= self._estimated_outlay(order, view)
 

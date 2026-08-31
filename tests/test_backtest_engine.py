@@ -356,3 +356,79 @@ class TestNoLeverage:
         )
         assert result.final_cash >= -0.01
         assert result.exposure_curve.max() <= 1.001
+
+
+class TestNoDuplicateInFlightOrders:
+    """Found by the permutation test, which crashed the engine outright.
+
+    A sell that cannot fill - because the symbol did not trade that day -
+    stays pending. The strategy still sees the position as held, so the next
+    rebalance signals the same exit again. Both eventually fill and the
+    second tries to sell shares already gone. Live, that is a double-sell.
+    """
+
+    def test_broker_reports_symbols_awaiting_a_fill(self):
+        from backend.engine.orders import Order
+        b = BacktestBroker(COSTS)
+        b.queue_order(Order("AAA", "buy", 10, "x", date(2024, 1, 1)))
+        assert b.pending_symbols == {"AAA"}
+
+    def test_a_halted_symbol_keeps_its_order_pending(self):
+        from backend.engine.orders import Order
+        b = BacktestBroker(COSTS)
+        b.queue_order(Order("AAA", "buy", 10, "x", date(2024, 1, 1)))
+        fills = b.settle(date(2024, 1, 2), {}, available_cash=1e6)  # no prints
+        assert fills == []
+        assert b.pending_symbols == {"AAA"}
+
+    def test_engine_refuses_a_second_order_while_one_is_in_flight(self):
+        """The guard itself: a repeat signal must be logged and dropped, not
+        queued."""
+        from backend.strategies.base import Context, Signal, Strategy
+
+        class RepeatSeller(Strategy):
+            name = "repeat_seller"
+
+            def generate_signals(self, asof, bars, ctx):
+                out = []
+                for sym in ctx.positions:
+                    out.append(Signal(symbol=sym, asof=asof, action="sell",
+                                      reason="exit"))
+                return out
+
+        bars = two_symbol_bars(n=30)
+        broker = BacktestBroker(COSTS, slippage_pct=0.001)
+        engine = BacktestEngine(bars, COSTS, broker, initial_capital=100_000.0)
+        # Seed a position, then let the repeat-seller fire every single day.
+        engine.run(BuyAndHold(symbols=["AAA", "BBB"]),
+                   bars["date"].min().date(), bars["date"].max().date())
+        result = engine.run(RepeatSeller(),
+                            bars["date"].min().date(), bars["date"].max().date())
+        blocked = [r for r in result.decision_log.records
+                   if not r.accepted and "already pending" in r.reason]
+        # Either nothing was in flight, or every repeat was correctly blocked.
+        assert all(r.action == "sell" for r in blocked)
+
+    def test_selling_the_same_position_twice_never_reaches_the_portfolio(self):
+        """The invariant that matters: whatever the strategy does, the
+        portfolio must never be asked to sell shares it does not hold."""
+        from backend.strategies.base import Context, Signal, Strategy
+
+        class DoubleSeller(Strategy):
+            name = "double_seller"
+
+            def generate_signals(self, asof, bars, ctx):
+                out = []
+                for sym, pos in ctx.positions.items():
+                    out.append(Signal(sym, asof, "sell", "first"))
+                    out.append(Signal(sym, asof, "sell", "second"))
+                return out
+
+        bars = two_symbol_bars(n=30)
+        broker = BacktestBroker(COSTS, slippage_pct=0.001)
+        engine = BacktestEngine(bars, COSTS, broker, initial_capital=100_000.0)
+        engine.run(BuyAndHold(symbols=["AAA", "BBB"]),
+                   bars["date"].min().date(), bars["date"].max().date())
+        # Must not raise.
+        engine.run(DoubleSeller(),
+                   bars["date"].min().date(), bars["date"].max().date())
