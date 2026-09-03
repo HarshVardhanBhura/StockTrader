@@ -92,7 +92,10 @@ class ResidualMomentum(Strategy):
         if len(hist) < need:
             return None
         out = self.mm.residuals(
-            symbol, hist["date"], hist["close"].to_numpy(), self.lookback + self.skip
+            symbol,
+            hist["date"].to_numpy(dtype="datetime64[ns]"),
+            hist["close"].to_numpy(),
+            self.lookback + self.skip,
         )
         if out is None:
             return None

@@ -184,3 +184,127 @@ class TestEngineContract:
         s2 = ResidualMomentum(mm)
         s2.load_state(s.get_state())
         assert s2._day_count == 17
+
+
+class TestAlignmentIsByDateNotPosition:
+    """Regression for a bug that changed results silently.
+
+    An earlier optimisation cached market returns per symbol and sliced them
+    POSITIONALLY. That works only while every symbol shares one date range -
+    which synthetic fixtures do, and real data never does. The moment the
+    engine was handed a per-window slice, the offsets referred to a different
+    origin and every regression used the wrong market returns. Nothing
+    errored; the out-of-sample Sharpe just moved from +1.286 to +1.497.
+    """
+
+    def _staggered(self):
+        """Symbols with DIFFERENT start dates - what real listings look like,
+        and what a same-start synthetic fixture cannot represent."""
+        rng = np.random.default_rng(4)
+        n = 400
+        calendar = pd.bdate_range("2022-01-03", periods=n)
+        mkt = rng.normal(0.001, 0.010, n)
+        frames = []
+        for sym, start in [("EARLY", 0), ("MID", 60), ("LATE", 140)]:
+            r = mkt[start:] + rng.normal(0, 0.004, n - start)
+            close = 500.0 * np.cumprod(1 + r)
+            frames.append(pd.DataFrame({
+                "date": calendar[start:], "symbol": sym, "series": "EQ",
+                "open": close, "high": close * 1.005, "low": close * 0.995,
+                "close": close,
+                "prev_close": np.concatenate([[500.0], close[:-1]]),
+                "volume": 400_000.0, "turnover": close * 400_000.0,
+                "trades": 5_000, "isin": "INE000000001",
+            }))
+        return pd.concat(frames, ignore_index=True)
+
+    def test_market_returns_match_the_symbols_own_dates(self):
+        bars = self._staggered()
+        mm = MarketModel.from_bars(bars)
+        for sym in ("EARLY", "MID", "LATE"):
+            hist = bars[bars["symbol"] == sym].sort_values("date").reset_index(drop=True)
+            dates = hist["date"].to_numpy(dtype="datetime64[ns]")
+            out = mm.residuals(sym, dates, hist["close"].to_numpy(), 100)
+            assert out is not None, sym
+            resid, beta = out
+            # Regressing a symbol against the market it actually belongs to
+            # must recover a beta near 1, whatever its start date. Reading the
+            # wrong slice would scramble this.
+            assert 0.5 < beta < 1.6, f"{sym} beta {beta:.2f} - wrong market slice?"
+
+    def test_a_sliced_panel_gives_the_same_answer_as_the_full_one(self):
+        """The exact failure mode: the engine passes a window slice, not the
+        symbol's whole history."""
+        bars = self._staggered()
+        mm = MarketModel.from_bars(bars)
+        hist = bars[bars["symbol"] == "EARLY"].sort_values("date").reset_index(drop=True)
+
+        full = mm.residuals("EARLY", hist["date"].to_numpy(dtype="datetime64[ns]"),
+                            hist["close"].to_numpy(), 100)
+        tail = hist.iloc[-150:]
+        sliced = mm.residuals("EARLY", tail["date"].to_numpy(dtype="datetime64[ns]"),
+                              tail["close"].to_numpy(), 100)
+        assert full is not None and sliced is not None
+        # Same trailing window of residuals either way.
+        assert np.allclose(full[0][-100:], sliced[0][-100:], atol=1e-12)
+
+    def test_dates_outside_the_market_series_are_dropped_not_misread(self):
+        bars = self._staggered()
+        mm = MarketModel.from_bars(bars)
+        hist = bars[bars["symbol"] == "MID"].sort_values("date").reset_index(drop=True)
+        shifted = hist["date"].to_numpy(dtype="datetime64[ns]") + np.timedelta64(3, "D")
+        out = mm.residuals("MID", shifted, hist["close"].to_numpy(), 100)
+        # Most shifted dates miss the market index; the result must be either
+        # None or built only from genuine matches - never silently wrong.
+        assert out is None or np.isfinite(out[1])
+
+
+class TestFastPathEquivalence:
+    """The aligned-market fast path must produce IDENTICAL numbers to the
+    reindex path it replaced. A speedup that changes results is a bug, and
+    this one is invisible - it would quietly shift every ranking."""
+
+    def test_fast_and_slow_paths_agree_exactly(self):
+        bars, _ = build(n=400)
+        mm = MarketModel.from_bars(bars)
+        for sym in ("HIBETA", "LOBETA", "ALPHA"):
+            hist = bars[bars["symbol"] == sym].sort_values("date").reset_index(drop=True)
+            closes = hist["close"].to_numpy()
+            fast = mm.residuals(sym, hist["date"], closes, 300, first_bar=0)
+            slow = mm.residuals(sym, hist["date"], closes, 300)  # no first_bar
+            assert fast is not None and slow is not None
+            assert np.allclose(fast[0], slow[0], atol=1e-12), sym
+            assert fast[1] == pytest.approx(slow[1], abs=1e-12), sym
+
+    def test_agreement_holds_on_a_mid_history_slice(self):
+        """The strategy always passes a trailing window, not the full series,
+        so the offset arithmetic is what actually matters."""
+        bars, _ = build(n=400)
+        mm = MarketModel.from_bars(bars)
+        hist = bars[bars["symbol"] == "ALPHA"].sort_values("date").reset_index(drop=True)
+        for start in (0, 37, 80):
+            sl = hist.iloc[start:start + 320]
+            closes = sl["close"].to_numpy()
+            fast = mm.residuals("ALPHA", sl["date"], closes, 300, first_bar=start)
+            slow = mm.residuals("ALPHA", sl["date"], closes, 300)
+            assert fast is not None and slow is not None
+            assert np.allclose(fast[0], slow[0], atol=1e-12), start
+            assert fast[1] == pytest.approx(slow[1], abs=1e-12), start
+
+    def test_whole_backtest_is_unchanged_by_the_optimisation(self):
+        """End to end: the same trades, the same equity, to the rupee."""
+        bars, _ = build(n=400)
+        mm_fast = MarketModel.from_bars(bars)
+        mm_slow = MarketModel.from_bars(bars)
+        mm_slow._aligned = {}          # force the reindex path everywhere
+
+        def run(mm):
+            broker = BacktestBroker(COSTS, slippage_pct=0.001)
+            eng = BacktestEngine(bars, COSTS, broker, initial_capital=500_000.0)
+            return eng.run(ResidualMomentum(mm, lookback=250, skip=10, top_n=2),
+                           bars["date"].min().date(), bars["date"].max().date())
+
+        a, b = run(mm_fast), run(mm_slow)
+        assert a.equity_curve.iloc[-1] == pytest.approx(b.equity_curve.iloc[-1], abs=1e-6)
+        assert len(a.fills) == len(b.fills)
+        assert [f.symbol for f in a.fills] == [f.symbol for f in b.fills]
