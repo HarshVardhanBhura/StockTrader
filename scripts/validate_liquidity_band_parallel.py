@@ -59,7 +59,7 @@ def load_bars() -> pd.DataFrame:
     return ca.adjust(raw)
 
 
-def midcap_universe(tb: pd.DataFrame) -> list[str]:
+def liquidity_band_universe(tb: pd.DataFrame) -> list[str]:
     m = tb.groupby("symbol")["turnover"].median()
     c = tb.groupby("symbol").size()
     ok = m[c > tb["date"].nunique() * 0.8].sort_values(ascending=False)
@@ -78,7 +78,7 @@ def walk_forward_sharpe(bars: pd.DataFrame) -> float:
     mm = MarketModel.from_bars(bars)
     wf = WalkForward(bars, COSTS, CAPITAL,
                      strategy_factory=_make_strategy(mm),
-                     universe_selector=midcap_universe, tax_model=TAX)
+                     universe_selector=liquidity_band_universe, tax_model=TAX)
     return wf.run(windows, GRID, verbose=False).oos_sharpe_annual
 
 

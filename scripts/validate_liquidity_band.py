@@ -10,8 +10,15 @@ grid and the procedure constant makes this a controlled comparison rather
 than another search: the only difference is where we look.
 
 The benchmark is buy-and-hold on the SAME universe, so the comparison is
-like for like. Beating a mid-cap basket is the relevant bar, not beating
-large caps with a mid-cap portfolio.
+like for like. Beating a basket drawn from the same liquidity band is the
+relevant bar, not beating the most-traded names with a thinner-traded
+portfolio.
+
+NOTE ON THE NAME: this band is defined by median daily TURNOVER, not by
+market capitalisation. NSE bhavcopy carries no shares-outstanding column, so
+market cap cannot be computed from our data at all. The two correlate but are
+not the same measure, and SEBI's large/mid/small-cap categories are market-cap
+ranks. Do not read this universe as SEBI mid caps.
 """
 from __future__ import annotations
 
@@ -61,7 +68,7 @@ PRIOR_TRIALS = 28
 N_TRIALS = PRIOR_TRIALS + len(expand_grid(GRID))
 
 print("=" * 100)
-print(f"MID-CAP UNIVERSE TEST — liquidity ranks {RANK_LO+1}-{RANK_HI}")
+print(f"LIQUIDITY BAND TEST — turnover ranks {RANK_LO+1}-{RANK_HI}")
 print("=" * 100)
 
 store = BarStore()
@@ -77,8 +84,11 @@ print(f"grid: {len(expand_grid(GRID))} configurations · "
       f"deflation charged for N={N_TRIALS}\n")
 
 
-def midcap_universe(tb: pd.DataFrame) -> list[str]:
-    """Liquidity ranks RANK_LO..RANK_HI, selected from the given window only."""
+def liquidity_band_universe(tb: pd.DataFrame) -> list[str]:
+    """Turnover ranks RANK_LO..RANK_HI, selected from the given window only.
+
+    Ranked by median daily turnover, not market cap - see the module docstring.
+    """
     m = tb.groupby("symbol")["turnover"].median()
     c = tb.groupby("symbol").size()
     ok = m[c > tb["date"].nunique() * 0.8].sort_values(ascending=False)
@@ -89,18 +99,18 @@ def run_walk_forward(data: pd.DataFrame, verbose: bool = False):
     mm = MarketModel.from_bars(data)
     wf = WalkForward(data, COSTS, CAPITAL,
                      strategy_factory=lambda **p: ResidualMomentum(mm, **p),
-                     universe_selector=midcap_universe, tax_model=TAX)
+                     universe_selector=liquidity_band_universe, tax_model=TAX)
     return wf.run(windows, GRID, verbose=verbose)
 
 
 def run_benchmark(data: pd.DataFrame):
-    """Buy-and-hold on the same mid-cap universe, carried across windows."""
+    """Buy-and-hold on the same liquidity band, carried across windows."""
     pf = Portfolio(cash=CAPITAL, tax_model=TAX)
     pieces, eq, per_window = [], CAPITAL, []
     for w in windows:
         tr = data[(data["date"] >= pd.Timestamp(w.train_start))
                   & (data["date"] <= pd.Timestamp(w.train_end))]
-        syms = midcap_universe(tr)
+        syms = liquidity_band_universe(tr)
         tradable = sorted(set(syms) | set(pf.positions))
         d = data[(data["symbol"].isin(tradable))
                  & (data["date"] >= pd.Timestamp(w.test_start))
@@ -121,7 +131,7 @@ def run_benchmark(data: pd.DataFrame):
 
 # ============================================================ STEPS 1 & 3
 print("=" * 100)
-print("STEPS 1 & 3 — walk-forward on the mid-cap universe")
+print("STEPS 1 & 3 — walk-forward on the liquidity band")
 print("=" * 100)
 t0 = time.perf_counter()
 real = run_walk_forward(bars, verbose=True)
@@ -157,7 +167,7 @@ is_bars = bars[(bars["date"] >= pd.Timestamp(IS_START)) & (bars["date"] <= pd.Ti
 
 def best_in_sample(data):
     mm = MarketModel.from_bars(data)
-    syms = midcap_universe(data)
+    syms = liquidity_band_universe(data)
     sub = data[data["symbol"].isin(syms)]
     best = -np.inf
     for params in expand_grid(GRID):
