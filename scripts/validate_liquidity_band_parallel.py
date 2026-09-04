@@ -117,18 +117,29 @@ def main() -> int:
                              on_progress=progress)
     elapsed = time.perf_counter() - t0
 
+    # Sample size is what CAME BACK, not what was asked for. A worker can
+    # die - 14 copies of a three-million-row frame is close to this machine's
+    # memory limit - and computing a p-value against the requested count
+    # would overstate the resolution actually achieved.
+    n_done = len(perms)
+    if n_done < n_perm:
+        print(f"  {n_perm - n_done} permutations did not complete; "
+              f"reporting against n={n_done}")
+    if n_done == 0:
+        print("  no permutations completed - nothing to report")
+        return 1
     result = PermutationResult(
-        f"STEP 4 — walk-forward permutation test ({n_perm} permutations)",
-        real=real, permuted=perms, n=n_perm)
+        f"STEP 4 — walk-forward permutation test ({n_done} permutations)",
+        real=real, permuted=perms, n=n_done)
     print()
     print(result.explain())
     print()
     print(f"  wall clock       : {elapsed / 60:.1f} min")
-    print(f"  serial would be  : {single * n_perm / 60:.0f} min")
-    print(f"  speedup          : {single * n_perm / elapsed:.1f}x")
+    print(f"  serial would be  : {single * n_done / 60:.0f} min")
+    print(f"  speedup          : {single * n_done / elapsed:.1f}x")
     print()
-    print(f"  smallest p-value reachable with n={n_perm}: {1/(n_perm+1):.4f}")
-    if result.p_value <= 1.5 / (n_perm + 1):
+    print(f"  smallest p-value reachable with n={n_done}: {1/(n_done+1):.4f}")
+    if result.p_value <= 1.5 / (n_done + 1):
         print("  The result is still at the resolution floor - no permutation")
         print("  beat it. More permutations would sharpen it further.")
     return 0
