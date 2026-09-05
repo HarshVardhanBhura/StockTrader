@@ -1,0 +1,1165 @@
+{
+  "started": "2026-09-05",
+  "capital": 500000.0,
+  "cash": 35609.768144928035,
+  "positions": {
+    "NATIONALUM": {
+      "shares": 33,
+      "avg_cost": 390.8535514283399,
+      "entry_date": "2026-08-31"
+    },
+    "BHEL": {
+      "shares": 31,
+      "avg_cost": 431.54240832062357,
+      "entry_date": "2026-08-31"
+    },
+    "WIPRO": {
+      "shares": 73,
+      "avg_cost": 180.564318873959,
+      "entry_date": "2026-08-31"
+    },
+    "HINDCOPPER": {
+      "shares": 25,
+      "avg_cost": 529.1555773183679,
+      "entry_date": "2026-08-31"
+    },
+    "ASIANPAINT": {
+      "shares": 5,
+      "avg_cost": 2595.6684569215395,
+      "entry_date": "2026-08-31"
+    },
+    "COALINDIA": {
+      "shares": 33,
+      "avg_cost": 402.9299239788823,
+      "entry_date": "2026-08-31"
+    },
+    "ADANIGREEN": {
+      "shares": 10,
+      "avg_cost": 1310.6622424563666,
+      "entry_date": "2026-08-31"
+    },
+    "PFC": {
+      "shares": 38,
+      "avg_cost": 352.77038487891195,
+      "entry_date": "2026-08-31"
+    },
+    "BANKBARODA": {
+      "shares": 55,
+      "avg_cost": 241.72788872952717,
+      "entry_date": "2026-08-31"
+    },
+    "HINDZINC": {
+      "shares": 21,
+      "avg_cost": 604.2195029644773,
+      "entry_date": "2026-08-31"
+    },
+    "MAXHEALTH": {
+      "shares": 13,
+      "avg_cost": 1015.2170451202779,
+      "entry_date": "2026-08-31"
+    },
+    "INDUSTOWER": {
+      "shares": 35,
+      "avg_cost": 380.83166549427995,
+      "entry_date": "2026-08-31"
+    },
+    "CHOLAFIN": {
+      "shares": 7,
+      "avg_cost": 1857.0554635813178,
+      "entry_date": "2026-08-31"
+    },
+    "BPCL": {
+      "shares": 41,
+      "avg_cost": 315.68940692288993,
+      "entry_date": "2026-08-31"
+    },
+    "SAIL": {
+      "shares": 66,
+      "avg_cost": 198.53356035372857,
+      "entry_date": "2026-08-31"
+    },
+    "RECLTD": {
+      "shares": 42,
+      "avg_cost": 317.5434558206911,
+      "entry_date": "2026-08-31"
+    },
+    "ASHOKLEY": {
+      "shares": 76,
+      "avg_cost": 175.38300384604997,
+      "entry_date": "2026-08-31"
+    },
+    "DIVISLAB": {
+      "shares": 1,
+      "avg_cost": 9259.220414478033,
+      "entry_date": "2026-08-31"
+    },
+    "POLICYBZR": {
+      "shares": 7,
+      "avg_cost": 1814.9635426582656,
+      "entry_date": "2026-08-31"
+    },
+    "HDFCAMC": {
+      "shares": 5,
+      "avg_cost": 2551.672377671016,
+      "entry_date": "2026-08-31"
+    },
+    "POLYCAB": {
+      "shares": 1,
+      "avg_cost": 9124.92714296163,
+      "entry_date": "2026-08-31"
+    },
+    "BAJAJFINSV": {
+      "shares": 6,
+      "avg_cost": 1989.9456710669533,
+      "entry_date": "2026-08-31"
+    },
+    "AMBER": {
+      "shares": 1,
+      "avg_cost": 7705.828094698733,
+      "entry_date": "2026-08-31"
+    },
+    "DLF": {
+      "shares": 19,
+      "avg_cost": 677.6298174314668,
+      "entry_date": "2026-08-31"
+    },
+    "BDL": {
+      "shares": 10,
+      "avg_cost": 1305.9519560673584,
+      "entry_date": "2026-08-31"
+    },
+    "DATAPATTNS": {
+      "shares": 2,
+      "avg_cost": 4628.106924348907,
+      "entry_date": "2026-08-31"
+    },
+    "CUMMINSIND": {
+      "shares": 2,
+      "avg_cost": 5161.2712560409,
+      "entry_date": "2026-08-31"
+    },
+    "ANGELONE": {
+      "shares": 45,
+      "avg_cost": 293.29049186026583,
+      "entry_date": "2026-08-31"
+    },
+    "HINDPETRO": {
+      "shares": 36,
+      "avg_cost": 362.792270812972,
+      "entry_date": "2026-08-31"
+    },
+    "OLAELEC": {
+      "shares": 343,
+      "avg_cost": 39.085355142834,
+      "entry_date": "2026-08-31"
+    },
+    "DRREDDY": {
+      "shares": 11,
+      "avg_cost": 1180.5781630322679,
+      "entry_date": "2026-08-31"
+    },
+    "LUPIN": {
+      "shares": 6,
+      "avg_cost": 2176.252530581129,
+      "entry_date": "2026-08-31"
+    },
+    "TATAPOWER": {
+      "shares": 38,
+      "avg_cost": 352.3695094415496,
+      "entry_date": "2026-08-31"
+    },
+    "MOTHERSON": {
+      "shares": 80,
+      "avg_cost": 165.05043944803413,
+      "entry_date": "2026-08-31"
+    },
+    "CGPOWER": {
+      "shares": 15,
+      "avg_cost": 886.0850448599148,
+      "entry_date": "2026-08-31"
+    },
+    "KALYANKJIL": {
+      "shares": 21,
+      "avg_cost": 616.8470792413929,
+      "entry_date": "2026-08-31"
+    },
+    "UNIONBANK": {
+      "shares": 71,
+      "avg_cost": 185.08418943022008,
+      "entry_date": "2026-08-31"
+    }
+  },
+  "pending": [],
+  "strategy_state": {
+    "bought": true,
+    "sold": false
+  },
+  "equity_history": [
+    {
+      "date": "2026-08-28",
+      "equity": 500000.0,
+      "cash": 500000.0,
+      "n_positions": 0
+    },
+    {
+      "date": "2026-08-31",
+      "equity": 501476.7,
+      "cash": 35609.77,
+      "n_positions": 37
+    },
+    {
+      "date": "2026-09-01",
+      "equity": 493794.53,
+      "cash": 35609.77,
+      "n_positions": 37
+    },
+    {
+      "date": "2026-09-02",
+      "equity": 494039.79,
+      "cash": 35609.77,
+      "n_positions": 37
+    },
+    {
+      "date": "2026-09-03",
+      "equity": 494528.09,
+      "cash": 35609.77,
+      "n_positions": 37
+    },
+    {
+      "date": "2026-09-04",
+      "equity": 494302.39,
+      "cash": 35609.77,
+      "n_positions": 37
+    }
+  ],
+  "trade_log": [
+    {
+      "date": "2026-08-31",
+      "symbol": "NATIONALUM",
+      "side": "buy",
+      "shares": 33,
+      "price": 390.39,
+      "costs": 15.3
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BHEL",
+      "side": "buy",
+      "shares": 31,
+      "price": 431.03,
+      "costs": 15.87
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "WIPRO",
+      "side": "buy",
+      "shares": 73,
+      "price": 180.35,
+      "costs": 15.63
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "HINDCOPPER",
+      "side": "buy",
+      "shares": 25,
+      "price": 528.53,
+      "costs": 15.69
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ASIANPAINT",
+      "side": "buy",
+      "shares": 5,
+      "price": 2592.59,
+      "costs": 15.39
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "COALINDIA",
+      "side": "buy",
+      "shares": 33,
+      "price": 402.45,
+      "costs": 15.77
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ADANIGREEN",
+      "side": "buy",
+      "shares": 10,
+      "price": 1309.11,
+      "costs": 15.54
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "PFC",
+      "side": "buy",
+      "shares": 38,
+      "price": 352.35,
+      "costs": 15.9
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BANKBARODA",
+      "side": "buy",
+      "shares": 55,
+      "price": 241.44,
+      "costs": 15.77
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "HINDZINC",
+      "side": "buy",
+      "shares": 21,
+      "price": 603.5,
+      "costs": 15.05
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "MAXHEALTH",
+      "side": "buy",
+      "shares": 13,
+      "price": 1014.01,
+      "costs": 15.65
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "INDUSTOWER",
+      "side": "buy",
+      "shares": 35,
+      "price": 380.38,
+      "costs": 15.81
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "CHOLAFIN",
+      "side": "buy",
+      "shares": 7,
+      "price": 1854.85,
+      "costs": 15.42
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BPCL",
+      "side": "buy",
+      "shares": 41,
+      "price": 315.31,
+      "costs": 15.35
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "SAIL",
+      "side": "buy",
+      "shares": 66,
+      "price": 198.3,
+      "costs": 15.54
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "RECLTD",
+      "side": "buy",
+      "shares": 42,
+      "price": 317.17,
+      "costs": 15.82
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ASHOKLEY",
+      "side": "buy",
+      "shares": 76,
+      "price": 175.17,
+      "costs": 15.81
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "DIVISLAB",
+      "side": "buy",
+      "shares": 1,
+      "price": 9248.24,
+      "costs": 10.98
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "POLICYBZR",
+      "side": "buy",
+      "shares": 7,
+      "price": 1812.81,
+      "costs": 15.07
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "HDFCAMC",
+      "side": "buy",
+      "shares": 5,
+      "price": 2548.65,
+      "costs": 15.13
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "POLYCAB",
+      "side": "buy",
+      "shares": 1,
+      "price": 9114.1,
+      "costs": 10.82
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BAJAJFINSV",
+      "side": "buy",
+      "shares": 6,
+      "price": 1987.59,
+      "costs": 14.16
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "AMBER",
+      "side": "buy",
+      "shares": 1,
+      "price": 7696.69,
+      "costs": 9.14
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "DLF",
+      "side": "buy",
+      "shares": 19,
+      "price": 676.83,
+      "costs": 15.27
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BDL",
+      "side": "buy",
+      "shares": 10,
+      "price": 1304.4,
+      "costs": 15.49
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "DATAPATTNS",
+      "side": "buy",
+      "shares": 2,
+      "price": 4622.62,
+      "costs": 10.98
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "CUMMINSIND",
+      "side": "buy",
+      "shares": 2,
+      "price": 5155.15,
+      "costs": 12.24
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ANGELONE",
+      "side": "buy",
+      "shares": 45,
+      "price": 292.94,
+      "costs": 15.65
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "HINDPETRO",
+      "side": "buy",
+      "shares": 36,
+      "price": 362.36,
+      "costs": 15.49
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "OLAELEC",
+      "side": "buy",
+      "shares": 343,
+      "price": 39.04,
+      "costs": 15.9
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "DRREDDY",
+      "side": "buy",
+      "shares": 11,
+      "price": 1179.18,
+      "costs": 15.4
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "LUPIN",
+      "side": "buy",
+      "shares": 6,
+      "price": 2173.67,
+      "costs": 15.49
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "TATAPOWER",
+      "side": "buy",
+      "shares": 38,
+      "price": 351.95,
+      "costs": 15.88
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "MOTHERSON",
+      "side": "buy",
+      "shares": 80,
+      "price": 164.85,
+      "costs": 15.66
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "CGPOWER",
+      "side": "buy",
+      "shares": 15,
+      "price": 885.03,
+      "costs": 15.76
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "KALYANKJIL",
+      "side": "buy",
+      "shares": 21,
+      "price": 616.12,
+      "costs": 15.36
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "UNIONBANK",
+      "side": "buy",
+      "shares": 71,
+      "price": 184.86,
+      "costs": 15.59
+    }
+  ],
+  "decision_log": [
+    {
+      "date": "2026-08-28",
+      "symbol": "NATIONALUM",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 33
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BHEL",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 31
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "WIPRO",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 73
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "HINDCOPPER",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 25
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ASIANPAINT",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 5
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "COALINDIA",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 33
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ADANIGREEN",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 10
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "PFC",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 38
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BANKBARODA",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 55
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "HINDZINC",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 21
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "MAXHEALTH",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 13
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "INDUSTOWER",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 35
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "CHOLAFIN",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 7
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BPCL",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 41
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "SAIL",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 66
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "RECLTD",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 42
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ASHOKLEY",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 76
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "DIVISLAB",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 1
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "POLICYBZR",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 7
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "HDFCAMC",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 5
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "POLYCAB",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 1
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BAJAJFINSV",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 6
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "AMBER",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 1
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "DLF",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 19
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BDL",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 10
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "DATAPATTNS",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 2
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "CUMMINSIND",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 2
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ANGELONE",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 45
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "HINDPETRO",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 36
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "OLAELEC",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 343
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "DRREDDY",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 11
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "LUPIN",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 6
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "TATAPOWER",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 38
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "MOTHERSON",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 80
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "CGPOWER",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 15
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "KALYANKJIL",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 21
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "UNIONBANK",
+      "action": "buy",
+      "reason": "initial equal-weight allocation",
+      "rule_inputs": {
+        "requested_universe": 232,
+        "affordable_universe": 37,
+        "equity": 500000.0
+      },
+      "rule_outcomes": {
+        "is_first_day": true,
+        "basket_trimmed_for_cost_floor": true
+      },
+      "accepted": true,
+      "shares": 71
+    }
+  ],
+  "last_run": "2026-09-04"
+}

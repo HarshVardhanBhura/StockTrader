@@ -51,6 +51,22 @@ class BuyAndHold(Strategy):
         self._bought = False
         self._sold = False
 
+    # ------------------------------------------------- persistence hooks
+    # A backtest keeps one instance alive for the whole run, so plain
+    # attributes are enough there. Paper trading rebuilds the strategy every
+    # evening from a fresh process, which would reset ``_bought`` to False and
+    # re-buy the entire basket daily. These hooks let the session carry the
+    # flags across runs, the same way the momentum strategies carry their
+    # rebalance clock.
+    def get_state(self) -> dict:
+        return {"bought": self._bought, "sold": self._sold}
+
+    def load_state(self, state: dict) -> None:
+        if not state:
+            return
+        self._bought = bool(state.get("bought", False))
+        self._sold = bool(state.get("sold", False))
+
     def affordable_symbols(self, equity: float, bars: BarView) -> list[str]:
         """Largest prefix of ``symbols`` whose equal-weight positions each
         clear the cost floor. Returns [] when even one position cannot."""

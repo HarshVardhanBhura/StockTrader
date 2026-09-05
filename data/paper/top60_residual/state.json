@@ -1,0 +1,552 @@
+{
+  "started": "2026-09-05",
+  "capital": 500000.0,
+  "cash": 60241.31886839828,
+  "positions": {
+    "APOLLOHOSP": {
+      "shares": 5,
+      "avg_cost": 8869.369051643098,
+      "entry_date": "2026-08-31"
+    },
+    "ADANIENT": {
+      "shares": 9,
+      "avg_cost": 3171.9268981299897,
+      "entry_date": "2026-08-31"
+    },
+    "ADANIPOWER": {
+      "shares": 139,
+      "avg_cost": 212.8347915816322,
+      "entry_date": "2026-08-31"
+    },
+    "SUNPHARMA": {
+      "shares": 30,
+      "avg_cost": 1921.1955335593018,
+      "entry_date": "2026-08-31"
+    },
+    "BSE": {
+      "shares": 7,
+      "avg_cost": 3412.4521605474297,
+      "entry_date": "2026-08-31"
+    },
+    "MCX": {
+      "shares": 6,
+      "avg_cost": 3323.2573757342957,
+      "entry_date": "2026-08-31"
+    },
+    "BAJAJ-AUTO": {
+      "shares": 2,
+      "avg_cost": 11936.066147465459,
+      "entry_date": "2026-08-31"
+    },
+    "DIXON": {
+      "shares": 1,
+      "avg_cost": 14682.062893397897,
+      "entry_date": "2026-08-31"
+    },
+    "POWERGRID": {
+      "shares": 166,
+      "avg_cost": 266.63227527566625,
+      "entry_date": "2026-08-31"
+    },
+    "TITAN": {
+      "shares": 7,
+      "avg_cost": 5170.290953381554,
+      "entry_date": "2026-08-31"
+    },
+    "ADANIPORTS": {
+      "shares": 22,
+      "avg_cost": 1713.7424947242598,
+      "entry_date": "2026-08-31"
+    },
+    "TVSMOTOR": {
+      "shares": 6,
+      "avg_cost": 4299.38906571174,
+      "entry_date": "2026-08-31"
+    },
+    "NETWEB": {
+      "shares": 2,
+      "avg_cost": 5333.647694106731,
+      "entry_date": "2026-08-31"
+    },
+    "ONGC": {
+      "shares": 182,
+      "avg_cost": 234.3116931383228,
+      "entry_date": "2026-08-31"
+    }
+  },
+  "pending": [],
+  "strategy_state": {
+    "day_count": 6,
+    "high_water": {}
+  },
+  "equity_history": [
+    {
+      "date": "2026-08-28",
+      "equity": 500000.0,
+      "cash": 500000.0,
+      "n_positions": 0
+    },
+    {
+      "date": "2026-08-31",
+      "equity": 493142.62,
+      "cash": 60241.32,
+      "n_positions": 14
+    },
+    {
+      "date": "2026-09-01",
+      "equity": 491797.66,
+      "cash": 60241.32,
+      "n_positions": 14
+    },
+    {
+      "date": "2026-09-02",
+      "equity": 492677.02,
+      "cash": 60241.32,
+      "n_positions": 14
+    },
+    {
+      "date": "2026-09-03",
+      "equity": 492205.13,
+      "cash": 60241.32,
+      "n_positions": 14
+    },
+    {
+      "date": "2026-09-04",
+      "equity": 492050.62,
+      "cash": 60241.32,
+      "n_positions": 14
+    }
+  ],
+  "trade_log": [
+    {
+      "date": "2026-08-31",
+      "symbol": "APOLLOHOSP",
+      "side": "buy",
+      "shares": 5,
+      "price": 8858.85,
+      "costs": 52.6
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ADANIENT",
+      "side": "buy",
+      "shares": 9,
+      "price": 3168.16,
+      "costs": 33.86
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ADANIPOWER",
+      "side": "buy",
+      "shares": 139,
+      "price": 212.58,
+      "costs": 35.09
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "SUNPHARMA",
+      "side": "buy",
+      "shares": 30,
+      "price": 1918.92,
+      "costs": 68.36
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BSE",
+      "side": "buy",
+      "shares": 7,
+      "price": 3408.4,
+      "costs": 28.33
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "MCX",
+      "side": "buy",
+      "shares": 6,
+      "price": 3319.32,
+      "costs": 23.65
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "BAJAJ-AUTO",
+      "side": "buy",
+      "shares": 2,
+      "price": 11921.91,
+      "costs": 28.31
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "DIXON",
+      "side": "buy",
+      "shares": 1,
+      "price": 14664.65,
+      "costs": 17.41
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "POWERGRID",
+      "side": "buy",
+      "shares": 166,
+      "price": 266.32,
+      "costs": 52.49
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "TITAN",
+      "side": "buy",
+      "shares": 7,
+      "price": 5164.16,
+      "costs": 42.92
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ADANIPORTS",
+      "side": "buy",
+      "shares": 22,
+      "price": 1711.71,
+      "costs": 44.71
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "TVSMOTOR",
+      "side": "buy",
+      "shares": 6,
+      "price": 4294.29,
+      "costs": 30.59
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "NETWEB",
+      "side": "buy",
+      "shares": 2,
+      "price": 5327.32,
+      "costs": 12.65
+    },
+    {
+      "date": "2026-08-31",
+      "symbol": "ONGC",
+      "side": "buy",
+      "shares": 182,
+      "price": 234.03,
+      "costs": 50.58
+    }
+  ],
+  "decision_log": [
+    {
+      "date": "2026-08-28",
+      "symbol": "APOLLOHOSP",
+      "action": "buy",
+      "reason": "residual rank 1 of 60: +24.2% market-adjusted over 126d (beta 0.29, t-score +2.04)",
+      "rule_inputs": {
+        "rank": 1,
+        "universe_ranked": 60,
+        "residual_momentum": 0.2425,
+        "beta": 0.285,
+        "t_score": 2.0427,
+        "target_weight": 0.0909
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 5
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "POWERINDIA",
+      "action": "buy",
+      "reason": "residual rank 2 of 60: +59.8% market-adjusted over 126d (beta 0.71, t-score +2.00)",
+      "rule_inputs": {
+        "rank": 2,
+        "universe_ranked": 60,
+        "residual_momentum": 0.5985,
+        "beta": 0.709,
+        "t_score": 2.0038,
+        "target_weight": 0.0344
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": false,
+      "why": "rounds to 0 shares at Rs 33,330.00"
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ADANIENT",
+      "action": "buy",
+      "reason": "residual rank 3 of 60: +28.3% market-adjusted over 126d (beta 1.12, t-score +1.27)",
+      "rule_inputs": {
+        "rank": 3,
+        "universe_ranked": 60,
+        "residual_momentum": 0.2825,
+        "beta": 1.124,
+        "t_score": 1.2679,
+        "target_weight": 0.0606
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 9
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ADANIPOWER",
+      "action": "buy",
+      "reason": "residual rank 4 of 60: +30.2% market-adjusted over 126d (beta 0.83, t-score +1.24)",
+      "rule_inputs": {
+        "rank": 4,
+        "universe_ranked": 60,
+        "residual_momentum": 0.3015,
+        "beta": 0.827,
+        "t_score": 1.2406,
+        "target_weight": 0.0594
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 139
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "SUNPHARMA",
+      "action": "buy",
+      "reason": "residual rank 5 of 60: +18.0% market-adjusted over 126d (beta 0.21, t-score +1.23)",
+      "rule_inputs": {
+        "rank": 5,
+        "universe_ranked": 60,
+        "residual_momentum": 0.1799,
+        "beta": 0.214,
+        "t_score": 1.229,
+        "target_weight": 0.1172
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 30
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BSE",
+      "action": "buy",
+      "reason": "residual rank 6 of 60: +22.8% market-adjusted over 126d (beta 0.99, t-score +1.03)",
+      "rule_inputs": {
+        "rank": 6,
+        "universe_ranked": 60,
+        "residual_momentum": 0.2278,
+        "beta": 0.987,
+        "t_score": 1.0265,
+        "target_weight": 0.0517
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 7
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "MCX",
+      "action": "buy",
+      "reason": "residual rank 7 of 60: +22.2% market-adjusted over 126d (beta 0.56, t-score +0.82)",
+      "rule_inputs": {
+        "rank": 7,
+        "universe_ranked": 60,
+        "residual_momentum": 0.2222,
+        "beta": 0.56,
+        "t_score": 0.8155,
+        "target_weight": 0.0427
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 6
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "BAJAJ-AUTO",
+      "action": "buy",
+      "reason": "residual rank 8 of 60: +13.3% market-adjusted over 126d (beta 0.53, t-score +0.79)",
+      "rule_inputs": {
+        "rank": 8,
+        "universe_ranked": 60,
+        "residual_momentum": 0.1331,
+        "beta": 0.526,
+        "t_score": 0.7909,
+        "target_weight": 0.0696
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 2
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "DIXON",
+      "action": "buy",
+      "reason": "residual rank 9 of 60: +19.1% market-adjusted over 126d (beta 1.21, t-score +0.78)",
+      "rule_inputs": {
+        "rank": 9,
+        "universe_ranked": 60,
+        "residual_momentum": 0.1913,
+        "beta": 1.214,
+        "t_score": 0.7847,
+        "target_weight": 0.0457
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 1
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "POWERGRID",
+      "action": "buy",
+      "reason": "residual rank 10 of 60: +9.7% market-adjusted over 126d (beta 0.21, t-score +0.60)",
+      "rule_inputs": {
+        "rank": 10,
+        "universe_ranked": 60,
+        "residual_momentum": 0.0971,
+        "beta": 0.213,
+        "t_score": 0.5975,
+        "target_weight": 0.0884
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 166
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "TITAN",
+      "action": "buy",
+      "reason": "residual rank 11 of 60: +8.7% market-adjusted over 126d (beta 0.75, t-score +0.58)",
+      "rule_inputs": {
+        "rank": 11,
+        "universe_ranked": 60,
+        "residual_momentum": 0.0869,
+        "beta": 0.754,
+        "t_score": 0.582,
+        "target_weight": 0.0766
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 7
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ADANIPORTS",
+      "action": "buy",
+      "reason": "residual rank 12 of 60: +8.2% market-adjusted over 126d (beta 1.03, t-score +0.48)",
+      "rule_inputs": {
+        "rank": 12,
+        "universe_ranked": 60,
+        "residual_momentum": 0.0823,
+        "beta": 1.032,
+        "t_score": 0.4774,
+        "target_weight": 0.0756
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 22
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "TVSMOTOR",
+      "action": "buy",
+      "reason": "residual rank 13 of 60: +8.9% market-adjusted over 126d (beta 0.79, t-score +0.45)",
+      "rule_inputs": {
+        "rank": 13,
+        "universe_ranked": 60,
+        "residual_momentum": 0.0894,
+        "beta": 0.789,
+        "t_score": 0.4547,
+        "target_weight": 0.0555
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 6
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "NETWEB",
+      "action": "buy",
+      "reason": "residual rank 14 of 60: +13.9% market-adjusted over 126d (beta 1.09, t-score +0.40)",
+      "rule_inputs": {
+        "rank": 14,
+        "universe_ranked": 60,
+        "residual_momentum": 0.1386,
+        "beta": 1.092,
+        "t_score": 0.4038,
+        "target_weight": 0.0267
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 2
+    },
+    {
+      "date": "2026-08-28",
+      "symbol": "ONGC",
+      "action": "buy",
+      "reason": "residual rank 15 of 60: +7.7% market-adjusted over 126d (beta -0.07, t-score +0.39)",
+      "rule_inputs": {
+        "rank": 15,
+        "universe_ranked": 60,
+        "residual_momentum": 0.0774,
+        "beta": -0.072,
+        "t_score": 0.3874,
+        "target_weight": 0.0849
+      },
+      "rule_outcomes": {
+        "in_top_15": true,
+        "score_above_floor": true,
+        "regime_risk_on": true
+      },
+      "accepted": true,
+      "shares": 182
+    }
+  ],
+  "last_run": "2026-09-04"
+}
