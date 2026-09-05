@@ -48,6 +48,7 @@ class ResidualMomentum(Strategy):
         exit_rank_buffer: int = 10,
         min_score: float = 0.0,
         inverse_vol_weight: bool = True,
+        weighting: str | None = None,
         cash_buffer: float = 0.02,
         regime: RegimeFilter | None = None,
         atr_stop_multiple: float | None = None,
@@ -59,7 +60,15 @@ class ResidualMomentum(Strategy):
         self.rebalance_days = rebalance_days
         self.exit_rank_buffer = exit_rank_buffer
         self.min_score = min_score
-        self.inverse_vol_weight = inverse_vol_weight
+        # ``weighting`` supersedes ``inverse_vol_weight``; the older flag is
+        # kept so the frozen paper-trading configuration keeps working
+        # unchanged. Default behaviour is identical either way.
+        if weighting is None:
+            weighting = "inverse_vol" if inverse_vol_weight else "equal"
+        if weighting not in ("inverse_vol", "equal", "score"):
+            raise ValueError(f"unknown weighting '{weighting}'")
+        self.weighting = weighting
+        self.inverse_vol_weight = weighting == "inverse_vol"
         self.cash_buffer = cash_buffer
         self.regime = regime
         self.stops = (
@@ -181,7 +190,7 @@ class ResidualMomentum(Strategy):
             return signals
 
         book = list(held) + new_names
-        weights = self._weights(book, bars)
+        weights = self._weights(book, bars, {r[0]: r[1] for r in ranked})
 
         for symbol in new_names:
             _, score, cum, beta = info[symbol]
@@ -209,12 +218,38 @@ class ResidualMomentum(Strategy):
             ))
         return signals
 
-    def _weights(self, book: list[str], bars: BarView) -> dict[str, float]:
+    def _weights(self, book: list[str], bars: BarView,
+                 score_of: dict[str, float] | None = None) -> dict[str, float]:
+        """Position weights over the intended book.
+
+        Three schemes, and the choice between them is a claim about what can
+        actually be forecast:
+
+        ``inverse_vol``  weight by 1/volatility. Uses only volatility, which
+                         is genuinely forecastable from recent data, and
+                         never asks the model how much a stock will return.
+        ``equal``        the naive baseline. Hard to beat out of sample.
+        ``score``        weight in proportion to the residual t-score, so
+                         higher conviction takes more capital. This is the
+                         one that requires believing the score's MAGNITUDE
+                         and not merely its ordering - estimation error in
+                         expected returns is what makes optimised portfolios
+                         lose to 1/N out of sample.
+        """
         investable = 1.0 - self.cash_buffer
         if not book:
             return {}
-        if not self.inverse_vol_weight:
+        if self.weighting == "equal":
             return {s: investable / len(book) for s in book}
+        if self.weighting == "score":
+            # Scores can be negative; a negative weight would be a short,
+            # which cash equity cannot hold overnight. Floor at zero and fall
+            # back to equal weight if nothing positive survives.
+            pos = {s: max(float(score_of.get(s, 0.0)), 0.0) for s in book}                 if score_of else {}
+            total = sum(pos.values())
+            if total <= 0:
+                return {s: investable / len(book) for s in book}
+            return {s: investable * v / total for s, v in pos.items()}
         inv = {}
         for s in book:
             hist = bars.history(s, lookback=64)
