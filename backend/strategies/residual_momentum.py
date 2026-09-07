@@ -47,6 +47,9 @@ class ResidualMomentum(Strategy):
         rebalance_days: int = 63,
         exit_rank_buffer: int = 10,
         min_score: float = 0.0,
+        exit_rule: str = "rank",
+        ltcg_grace_days: int = 100,
+        cost_model=None,
         inverse_vol_weight: bool = True,
         weighting: str | None = None,
         cash_buffer: float = 0.02,
@@ -60,6 +63,11 @@ class ResidualMomentum(Strategy):
         self.rebalance_days = rebalance_days
         self.exit_rank_buffer = exit_rank_buffer
         self.min_score = min_score
+        if exit_rule not in ("rank", "tax_aware", "cost_aware"):
+            raise ValueError(f"unknown exit_rule '{exit_rule}'")
+        self.exit_rule = exit_rule
+        self.ltcg_grace_days = ltcg_grace_days
+        self.cost_model = cost_model
         # ``weighting`` supersedes ``inverse_vol_weight``; the older flag is
         # kept so the frozen paper-trading configuration keeps working
         # unchanged. Default behaviour is identical either way.
@@ -166,6 +174,39 @@ class ResidualMomentum(Strategy):
             weak = entry is not None and entry[1] <= self.min_score
             if not (dropped or weak):
                 continue
+
+            # A negative score is a broken thesis; neither override applies to
+            # it. Both only ever POSTPONE an exit, never force one.
+            if not weak and self.exit_rule != "rank":
+                keep = None
+                if self.exit_rule == "tax_aware":
+                    keep = self._defer_for_ltcg(symbol, asof, ctx, bars)
+                    why = "exit deferred {d}d for long-term capital gains: "                           "saves Rs {s:,.0f} in tax"
+                elif self.exit_rule == "cost_aware":
+                    # index 2 is the accumulated residual RETURN; index 1
+                    # is its t-score. The hurdle is a fraction of position
+                    # value, so both sides have to be returns.
+                    best = eligible[0][2] if eligible else 0.0
+                    keep = self._switch_is_worth_it(
+                        symbol, asof, ctx, bars,
+                        held_return=entry[2] if entry else 0.0,
+                        candidate_return=best)
+                    why = None
+                if keep is not None:
+                    reason = (why.format(d=keep["days_to_ltcg"], s=keep["saving"])
+                              if why else
+                              f"kept: replacing it gains {keep['edge']:+.1%} "
+                              f"of residual return against a "
+                              f"{keep['hurdle']:.1%} cost-and-tax hurdle")
+                    signals.append(Signal(
+                        symbol=symbol, asof=asof, action="hold", reason=reason,
+                        rule_inputs=keep,
+                        rule_outcomes={"exit_signalled": True,
+                                       "exit_overridden": True,
+                                       "rule": self.exit_rule},
+                    ))
+                    continue
+
             signals.append(Signal(
                 symbol=symbol, asof=asof, action="sell",
                 reason=("residual momentum score turned negative" if weak else
@@ -217,6 +258,89 @@ class ResidualMomentum(Strategy):
                 },
             ))
         return signals
+
+    # ---------------------------------------------------------- exits
+    def _defer_for_ltcg(self, symbol: str, asof: date, ctx: Context,
+                        bars: BarView) -> dict | None:
+        """Should a sell be postponed to reach long-term capital gains?
+
+        Selling inside 365 days pays 20% STCG; past it, 12.5% LTCG. A
+        profitable position weeks away from that line is worth holding
+        purely for the tax treatment - the buy-and-hold benchmark gets that
+        advantage for free, and a low-turnover strategy can take it too.
+
+        Only applies to a position showing a GAIN. There is no tax advantage
+        to deferring a loss, and realising it sooner is if anything better.
+        """
+        pos = ctx.positions.get(symbol)
+        price = bars.close(symbol)
+        if pos is None or price is None:
+            return None
+        remaining = LTCG_DAYS - (asof - pos.entry_date).days
+        if not (0 < remaining <= self.ltcg_grace_days):
+            return None
+        gain = (price - pos.avg_cost) * pos.shares
+        if gain <= 0:
+            return None
+        stcg, ltcg = gain * 0.20, gain * 0.125
+        return {"days_to_ltcg": remaining, "unrealised_gain": round(gain, 2),
+                "tax_if_sold_now": round(stcg, 2),
+                "tax_if_deferred": round(ltcg, 2),
+                "saving": round(stcg - ltcg, 2)}
+
+    def _switch_is_worth_it(self, symbol: str, asof: date, ctx: Context,
+                            bars: BarView, held_return: float,
+                            candidate_return: float) -> dict | None:
+        """Is replacing this holding worth what the replacement costs?
+
+        The plain rank rule sells rank 26 to buy rank 15 without asking
+        whether that upgrade pays for itself. It has to clear:
+
+            residual_return(candidate) - residual_return(holding)
+                >  round-trip cost + tax, as a fraction of position value
+
+        BOTH SIDES MUST BE IN RETURN UNITS. The first version of this
+        compared the difference in SCORES - t-statistics, median magnitude
+        2.19 - against a fractional cost hurdle of median 0.0167. Those are
+        not the same quantity, the comparison cleared 82 times out of 82,
+        and the rule silently never kept anything. The ablation that used it
+        reported three identical arms, which is the only reason the error
+        was caught.
+
+        Accumulated residual return is the return-unit quantity available
+        here. Using it assumes past residual return proxies for expected
+        future return, which is a real assumption and a weak one - it is the
+        same 'believe the magnitude, not just the ordering' problem that
+        makes conviction weighting fail.
+
+        Returns the reasoning when the switch does NOT clear the hurdle -
+        i.e. when the holding should be kept.
+
+        A loss-making position has a NEGATIVE tax term: realising the loss
+        is worth something against other gains, which lowers the hurdle
+        rather than raising it.
+        """
+        pos = ctx.positions.get(symbol)
+        price = bars.close(symbol)
+        if pos is None or price is None or price <= 0:
+            return None
+        value = pos.shares * price
+        if value <= 0:
+            return None
+        cost = (value * self.cost_model.breakeven_move_pct(price, pos.shares)
+                if self.cost_model is not None else value * 0.005)
+        gain = (price - pos.avg_cost) * pos.shares
+        tax = gain * 0.20
+        hurdle_cash = cost + max(tax, 0.0) + min(tax, 0.0)
+        hurdle_score = hurdle_cash / value
+        edge = candidate_return - held_return
+        if edge > hurdle_score:
+            return None
+        return {"held_residual_return": round(held_return, 4),
+                "candidate_residual_return": round(candidate_return, 4),
+                "edge": round(edge, 4),
+                "hurdle": round(hurdle_score, 4),
+                "cost": round(cost, 2), "tax": round(tax, 2)}
 
     def _weights(self, book: list[str], bars: BarView,
                  score_of: dict[str, float] | None = None) -> dict[str, float]:
