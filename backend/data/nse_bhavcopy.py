@@ -122,10 +122,31 @@ def parse_udiff(csv_text: str) -> pd.DataFrame:
 
 
 def parse_legacy(csv_text: str) -> pd.DataFrame:
+    """Parse a pre-UDiFF bhavcopy.
+
+    There are TWO legacy schemas, not one. Files from roughly 2011 onward
+    carry 14 columns including TOTALTRADES and ISIN; older ones carry 12 and
+    have neither:
+
+        2008  SYMBOL SERIES OPEN HIGH LOW CLOSE LAST PREVCLOSE
+              TOTTRDQTY TOTTRDVAL TIMESTAMP
+        2012  ...the same... + TOTALTRADES + ISIN
+
+    Both missing columns matter. ``trades`` is only ever a diagnostic, so it
+    becomes NaN. ``isin`` is load-bearing: ``equities_only()`` filters on the
+    INE prefix, and without it ETFs and sovereign gold bonds cannot be told
+    from ordinary shares. Rather than guess, the column is left EMPTY and
+    ``backfill_isin`` maps symbols to the ISINs they carry in later files.
+    An empty ISIN is visible and fixable; a fabricated one is neither.
+    """
     df = pd.read_csv(io.StringIO(csv_text))
     # The legacy header ends with a stray comma, producing an unnamed column.
     df = df.loc[:, [c for c in df.columns if not str(c).startswith("Unnamed")]]
     df.columns = [str(c).strip() for c in df.columns]
+    if "TOTALTRADES" not in df.columns:
+        df["TOTALTRADES"] = pd.NA
+    if "ISIN" not in df.columns:
+        df["ISIN"] = ""
     out = pd.DataFrame({
         "date": _parse_legacy_dates(df["TIMESTAMP"]).dt.date,
         "symbol": df["SYMBOL"].astype(str).str.strip(),
@@ -195,3 +216,32 @@ def trading_days(start: date, end: date) -> list[date]:
             days.append(cur)
         cur += timedelta(days=1)
     return days
+
+
+def backfill_isin(bars: pd.DataFrame) -> pd.DataFrame:
+    """Fill empty ISINs from the same symbol's later, ISIN-bearing rows.
+
+    Pre-2011 bhavcopy has no ISIN column, and ``equities_only()`` depends on
+    it. A symbol that still traded after 2011 can be mapped confidently; one
+    that never reappears is either delisted or renamed, and gets left empty
+    rather than guessed.
+
+    Leaving them empty is the safe failure: an empty ISIN fails the INE
+    prefix test, so such a symbol is excluded from the equity universe. That
+    loses some genuinely delisted equities - which is a real cost, since
+    delisted names are exactly what makes this data survivorship-bias free -
+    but the alternative is silently trading instruments whose type is
+    unknown. The count of unmapped symbols is returned in the frame's attrs
+    so callers can see how much is being dropped.
+    """
+    if "isin" not in bars.columns:
+        return bars
+    isin = bars["isin"].astype(str).str.strip()
+    known = (bars.assign(_i=isin)[lambda d: d["_i"].str.len() > 0]
+             .groupby("symbol")["_i"].agg(lambda s: s.mode().iloc[0]))
+    filled = isin.where(isin.str.len() > 0, bars["symbol"].map(known))
+    out = bars.copy()
+    out["isin"] = filled.fillna("")
+    missing = out.loc[out["isin"] == "", "symbol"].nunique()
+    out.attrs["isin_unmapped_symbols"] = int(missing)
+    return out
