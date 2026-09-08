@@ -48,6 +48,7 @@ class ResidualMomentum(Strategy):
         exit_rank_buffer: int = 10,
         min_score: float = 0.0,
         exit_rule: str = "rank",
+        regime_liquidates: bool = False,
         ltcg_grace_days: int = 100,
         cost_model=None,
         inverse_vol_weight: bool = True,
@@ -66,6 +67,13 @@ class ResidualMomentum(Strategy):
         if exit_rule not in ("rank", "tax_aware", "cost_aware"):
             raise ValueError(f"unknown exit_rule '{exit_rule}'")
         self.exit_rule = exit_rule
+        # When True, a risk-off regime CLOSES the book rather than merely
+        # stopping new entries. Measured on 2005-2014: the plain gate bought
+        # 0.1pp of drawdown protection through 2008 because it only empties
+        # the buy list - a book already holding 15 names rides the crash all
+        # the way down. The gate was an entry filter wearing a crash
+        # defence's justification.
+        self.regime_liquidates = regime_liquidates
         self.ltcg_grace_days = ltcg_grace_days
         self.cost_model = cost_model
         # ``weighting`` supersedes ``inverse_vol_weight``; the older flag is
@@ -154,6 +162,26 @@ class ResidualMomentum(Strategy):
 
         is_rebalance = (self._day_count % self.rebalance_days) == 0
         self._day_count += 1
+
+        # The regime is checked EVERY DAY when it is allowed to liquidate,
+        # not only on rebalance days. A quarterly rebalance gives about five
+        # decision points in a fourteen-month decline, so a crash defence
+        # gated on it would arrive months late and would not be a defence at
+        # all. Entries stay on the quarterly clock: reacting fast to get OUT
+        # is the point; reacting fast to get IN is churn, which the DP charge
+        # punishes.
+        if self.regime_liquidates and self.regime is not None                 and not self.regime.risk_on(asof) and held:
+            for symbol in sorted(held):
+                signals.append(Signal(
+                    symbol=symbol, asof=asof, action="sell",
+                    reason="regime risk-off: closing the book",
+                    rule_outcomes={"regime_risk_on": False, "liquidating": True},
+                ))
+                if self.stops is not None:
+                    self.stops.reset(symbol)
+            held.clear()
+            return signals
+
         if not is_rebalance:
             return signals
 

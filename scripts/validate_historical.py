@@ -60,6 +60,7 @@ from backend.engine.backtest import BacktestEngine  # noqa: E402
 from backend.engine.portfolio import Portfolio  # noqa: E402
 from backend.engine.walkforward import make_windows  # noqa: E402
 from backend.features.market_model import MarketModel  # noqa: E402
+from backend.features.regime import RegimeConfig, RegimeFilter  # noqa: E402
 from backend.store.parquet_store import BarStore  # noqa: E402
 from backend.strategies.buy_and_hold import BuyAndHold  # noqa: E402
 from backend.strategies.residual_momentum import ResidualMomentum  # noqa: E402
@@ -123,11 +124,24 @@ def run(strategy_name: str):
                  & (bars["date"] <= pd.Timestamp(w.test_end))]
         if d.empty:
             continue
-        if strategy_name == "residual":
+        if strategy_name.startswith("residual"):
             broad = tr.groupby("symbol")["turnover"].median()
             broad = broad[broad > MIN_TURNOVER].index
-            mm = MarketModel.from_bars(bars[bars["symbol"].isin(broad)])
-            strat = ResidualMomentum(mm, **FROZEN)
+            broad_bars = bars[bars["symbol"].isin(broad)]
+            mm = MarketModel.from_bars(broad_bars)
+            regime = None
+            if strategy_name.startswith("residual_regime"):
+                # Built from the BROAD liquid market, not the traded band: a
+                # regime is a statement about the market, not about the slice
+                # this strategy happens to hold. Restricted to data up to the
+                # window's end so no future bar can inform the gate.
+                hist = broad_bars[broad_bars["date"] <= pd.Timestamp(w.test_end)]
+                regime = RegimeFilter(hist, RegimeConfig(trend_window=200,
+                                                         vol_lookback=252))
+            strat = ResidualMomentum(
+                mm, regime=regime,
+                regime_liquidates=(strategy_name == "residual_regime_exit"),
+                **FROZEN)
         else:
             strat = BuyAndHold(symbols=syms, cost_model=costs,
                                max_cost_pct=budget)
@@ -170,6 +184,22 @@ s = stats(scurve)
 
 print()
 print("=" * 96)
+print("STRATEGY + REGIME FILTER - the crash defence the plan designed")
+print("=" * 96)
+rcurve, rw = run("residual_regime")
+print(rw.to_string(index=False))
+r = stats(rcurve)
+
+print()
+print("=" * 96)
+print("STRATEGY + REGIME LIQUIDATION - risk-off closes the book, checked daily")
+print("=" * 96)
+lcurve, lw = run("residual_regime_exit")
+print(lw.to_string(index=False))
+lq = stats(lcurve)
+
+print()
+print("=" * 96)
 print("BENCHMARK - buy-and-hold on the same band")
 print("=" * 96)
 bcurve, bw = run("hold")
@@ -178,6 +208,10 @@ b = stats(bcurve)
 print(f"  {'':<12} {'final':>13} {'CAGR':>8} {'Sharpe':>8} {'max DD':>9}")
 print(f"  {'strategy':<12} Rs {s['final']:>10,.0f} {s['cagr']:>+8.1%} "
       f"{s['sharpe']:>+8.2f} {s['dd']:>9.1%}")
+print(f"  {'+ regime':<12} Rs {r['final']:>10,.0f} {r['cagr']:>+8.1%} "
+      f"{r['sharpe']:>+8.2f} {r['dd']:>9.1%}")
+print(f"  {'+ liquidate':<12} Rs {lq['final']:>10,.0f} {lq['cagr']:>+8.1%} "
+      f"{lq['sharpe']:>+8.2f} {lq['dd']:>9.1%}")
 print(f"  {'benchmark':<12} Rs {b['final']:>10,.0f} {b['cagr']:>+8.1%} "
       f"{b['sharpe']:>+8.2f} {b['dd']:>9.1%}")
 
@@ -192,10 +226,17 @@ def _slice(c, lo=date(2008, 1, 1), hi=date(2009, 3, 31)):
     mask = (idx >= pd.Timestamp(lo)) & (idx <= pd.Timestamp(hi))
     return c[mask.to_numpy()]
 
-crash, bcrash = _slice(scurve), _slice(bcurve)
+crash, rcrash, bcrash = _slice(scurve), _slice(rcurve), _slice(bcurve)
+lcrash = _slice(lcurve)
 if len(crash) > 1:
     print(f"  strategy  2008-01 .. 2009-03 : {crash.iloc[-1]/crash.iloc[0]-1:+.1%}   "
           f"peak-to-trough {float((crash/crash.cummax()-1).min()):.1%}")
+if len(rcrash) > 1:
+    print(f"  + regime  2008-01 .. 2009-03 : {rcrash.iloc[-1]/rcrash.iloc[0]-1:+.1%}   "
+          f"peak-to-trough {float((rcrash/rcrash.cummax()-1).min()):.1%}")
+if len(lcrash) > 1:
+    print(f"  + liquid. 2008-01 .. 2009-03 : {lcrash.iloc[-1]/lcrash.iloc[0]-1:+.1%}   "
+          f"peak-to-trough {float((lcrash/lcrash.cummax()-1).min()):.1%}")
 if len(bcrash) > 1:
     print(f"  benchmark 2008-01 .. 2009-03 : "
           f"{bcrash.iloc[-1]/bcrash.iloc[0]-1:+.1%}   "

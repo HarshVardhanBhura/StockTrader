@@ -424,6 +424,32 @@ Recorded now, before the headline crowds them out:
 
 **Consequence for the paper trade.** The running paper account trades `PatientMomentum` on the **top-60** universe — the one bucket with no reliable spread. Its configuration is frozen deliberately: editing a running forward test destroys the only untouched evidence it exists to produce. The correct move is a **second, separate paper account** on the turnover-rank 61-300 band, running alongside the first rather than replacing it.
 
+### Historical validation (2005-2014) — the frozen configuration does not survive 2008
+
+The whole project had been validated on 2015-2026. That decade contains COVID — a fast crash and a fast recovery — and nothing resembling 2008, a fourteen-month grind down. Roughly 2,500 trading days of pre-2015 bhavcopy were ingested (see `india_historical.py` for the era-aware cost and tax model) and the **frozen configuration was run once, unchanged**. One trial, nothing searched.
+
+| Arm | Final | CAGR | Sharpe | Max DD | 2008-01..2009-03 |
+|---|---|---|---|---|---|
+| strategy (as running) | ₹348,110 | −5.0% | −0.12 | **−68.9%** | −66.0% |
+| + regime filter | ₹311,816 | −6.5% | −0.22 | −68.8% | −65.5% |
+| + regime **liquidation** | ₹447,907 | −1.6% | −0.25 | **−20.1%** | +0.0% |
+| **buy-and-hold (same band)** | **₹709,202** | **+5.1%** | **+0.32** | −65.8% | −58.4% |
+
+**Nothing beat buy-and-hold.** Every arm lost money over the decade while the benchmark compounded at +5.1%.
+
+**The −68.9% drawdown reproduces the −70.5% figure this plan has cited since it was written.** That number was the stated justification for the regime filter. It has now been measured on our own configuration, and it is real. The worst ever seen on 2015-2026 was −26.1%.
+
+**The regime filter does not do the job this plan assigned it.** It fired correctly — risk-on only 5% of days through the crash — but `target = [...] if regime_ok else []` only empties the BUY list. A book already holding 15 names rides the decline all the way down; the gate merely stops it adding. It bought 0.1pp of drawdown protection. The claim that it is "the entire justification... an unfiltered momentum book would have been unholdable through 2008" was wrong about the mechanism: as built, it is an entry filter wearing a crash defence's justification. This was invisible on 2015-2026, where the one sharp drawdown was fast enough that an entry gate looked adequate.
+
+**Making risk-off liquidate works, and costs what such filters always cost.** Checked daily rather than on the quarterly rebalance clock — five decision points in a fourteen-month decline would arrive months late — it cuts the drawdown to −20.1% and sits out 2008 entirely. It also missed the recovery: **+59.1% for the unfiltered arm in the 2009 window against −0.7%** for this one, and it held cash through all of 2011-12. Getting out keeps you out.
+
+**Two engine bugs this run exposed, both mine, both caught by impossible numbers.**
+
+1. *The benchmark bought nothing for four windows*, sitting at exactly ₹500,000 through a crash that took Indian equities down about 60%. The engine rejects positions costing more than `max_cost_pct` (0.5%) — a 2026 rule aimed at the flat ₹13 DP charge. In 2008 the *proportional* cost floor alone was 1.45%, so no quantity at any price could satisfy it. The two code paths then disagreed about the unsatisfiable constraint: `min_quantity_for_cost_budget` returns 0, so the engine's `shares < min_shares` test never fires and a strategy trades freely, while `BuyAndHold.affordable_symbols` tests cost directly and buys nothing. This is the Phase 4 frozen-benchmark failure, reintroduced through era-aware costs. `cost_budget_for()` now sets the budget to the era's own achievable floor plus 0.3pp — 1.75% in 2008, 0.52% today.
+2. *The regime liquidation initially ran on the rebalance clock*, which would have tested a quarterly crash defence and proved nothing.
+
+**Caveat that cuts against the result being even this good:** 411 pre-2011 symbols were dropped for unmappable ISIN — 8.6% of pre-2011 turnover — so the historical universe tilts toward survivors. Reality was probably worse.
+
 ### Phase 5 — Dashboard *(your requirement #4a)*
 React UI: tradability explorer, run browser, equity-curve overlay for N runs, side-by-side metrics table, trade-level drill-down, parameter-sensitivity heatmaps.
 
