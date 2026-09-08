@@ -81,7 +81,7 @@
   },
   "pending": [],
   "strategy_state": {
-    "day_count": 7,
+    "day_count": 8,
     "high_water": {}
   },
   "equity_history": [
@@ -124,6 +124,12 @@
     {
       "date": "2026-09-07",
       "equity": 485629.87,
+      "cash": 20922.63,
+      "n_positions": 15
+    },
+    {
+      "date": "2026-09-08",
+      "equity": 492397.02,
       "cash": 20922.63,
       "n_positions": 15
     }
@@ -567,5 +573,5 @@
       "shares": 11
     }
   ],
-  "last_run": "2026-09-07"
+  "last_run": "2026-09-08"
 }

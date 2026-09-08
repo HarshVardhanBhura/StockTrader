@@ -142,3 +142,40 @@ def summarise(price: float = 500.0, quantity: int = 100) -> str:
             f"{rt / (price * quantity):>7.2%}  "
             f"{era.tax.stcg_pct:>5.0%} {era.tax.ltcg_pct:>6.1%}  {era.note}")
     return "\n".join(lines)
+
+
+def cost_floor(costs: IndiaEquityDeliveryCosts, price: float = 500.0) -> float:
+    """The round-trip cost a position cannot get below, however large.
+
+    At large quantity the flat DP charge vanishes into the position and what
+    remains is proportional: brokerage, STT, stamp duty, exchange fees. In
+    2026 that floor is 0.22%; before discount broking existed it was 1.45%.
+    """
+    return costs.breakeven_move_pct(price, 100_000)
+
+
+def cost_budget_for(d: date, headroom: float = 0.003) -> float:
+    """The per-position cost budget appropriate to ``d``.
+
+    THE BUG THIS FIXES. The engine rejects a position whose round-trip cost
+    exceeds ``max_cost_pct``, defaulting to 0.5%. That is a 2026 number: it
+    exists to stop positions so small that the FLAT Rs 13 DP charge dominates
+    them. Applied to 2008, where the proportional floor alone is 1.45%, it is
+    not a floor but an impossibility - no quantity at any price can satisfy
+    it.
+
+    Worse, the two code paths disagreed about what to do when it cannot be
+    satisfied. ``min_quantity_for_cost_budget`` returns 0, so the engine's
+    ``shares < min_shares`` test never fires and a strategy trades freely.
+    ``BuyAndHold.affordable_symbols`` tests the cost directly, finds nothing
+    passes, and buys NOTHING. In a historical run the strategy traded through
+    2008 while its benchmark sat in cash for four straight windows at exactly
+    Rs 500,000 - which is the same frozen-benchmark failure Phase 4 already
+    caught once, reintroduced through era-aware costs.
+
+    Expressing the budget as the era's own floor plus headroom preserves the
+    intent - do not take a position where the fixed component dominates -
+    without being unsatisfiable. At 2026 rates this gives 0.52%, close to the
+    0.5% used throughout, so present-day behaviour is essentially unchanged.
+    """
+    return cost_floor(costs_for(d)) + headroom
