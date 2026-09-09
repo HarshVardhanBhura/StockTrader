@@ -51,6 +51,9 @@ class ResidualMomentum(Strategy):
         regime_liquidates: bool = False,
         ltcg_grace_days: int = 100,
         cost_model=None,
+        vol_target: float | None = None,
+        vol_window: int = 63,
+        min_vol_scale: float = 0.25,
         inverse_vol_weight: bool = True,
         weighting: str | None = None,
         cash_buffer: float = 0.02,
@@ -76,6 +79,11 @@ class ResidualMomentum(Strategy):
         self.regime_liquidates = regime_liquidates
         self.ltcg_grace_days = ltcg_grace_days
         self.cost_model = cost_model
+        # Explicit portfolio risk target. None keeps the previous behaviour
+        # exactly, so the running paper accounts are unaffected.
+        self.vol_target = vol_target
+        self.vol_window = vol_window
+        self.min_vol_scale = min_vol_scale
         # ``weighting`` supersedes ``inverse_vol_weight``; the older flag is
         # kept so the frozen paper-trading configuration keeps working
         # unchanged. Default behaviour is identical either way.
@@ -260,6 +268,9 @@ class ResidualMomentum(Strategy):
 
         book = list(held) + new_names
         weights = self._weights(book, bars, {r[0]: r[1] for r in ranked})
+        scale = self._vol_scale(weights, bars)
+        if scale < 1.0:
+            weights = {s: w * scale for s, w in weights.items()}
 
         for symbol in new_names:
             _, score, cum, beta = info[symbol]
@@ -369,6 +380,56 @@ class ResidualMomentum(Strategy):
                 "edge": round(edge, 4),
                 "hurdle": round(hurdle_score, 4),
                 "cost": round(cost, 2), "tax": round(tax, 2)}
+
+    def _vol_scale(self, weights: dict[str, float], bars: BarView) -> float:
+        """Scale the whole book so its expected volatility hits the target.
+
+        WHY THIS EXISTS. Portfolio volatility was previously whatever fell out
+        of holding 15 inverse-vol-weighted names - measured at 14.1%
+        annualised over 2015-2026, with skew -0.49 and excess kurtosis +4.2.
+        That number was an accident of the position count and the weighting
+        scheme, not a decision, and an untargeted book drifts to HIGHER risk
+        in exactly the regimes where risk should come down. Carver's Table 25
+        puts the right target at 10% for a realistic 0.40 Sharpe with negative
+        skew; we were running 1.4x that.
+
+        HOW THE ESTIMATE IS MADE. The intended book's own weighted return
+        series over the trailing window, rather than a 15x15 covariance
+        matrix. One number instead of 120 correlations, each of which would be
+        estimated from 63 observations and mostly noise. This measures exactly
+        the quantity being targeted and nothing else.
+
+        IT CAN ONLY DE-RISK. Indian cash equity delivery cannot be levered, so
+        a book quieter than the target cannot be scaled up - the multiplier is
+        capped at 1.0. Volatility targeting here removes risk in turbulent
+        regimes and does nothing in calm ones, which is the asymmetry the
+        instrument imposes rather than a design choice.
+
+        The floor stops a volatility spike emptying the book entirely; that
+        judgement belongs to the regime filter, which acts on the market
+        rather than on the book's own recent wobble.
+        """
+        if self.vol_target is None or not weights:
+            return 1.0
+        series = []
+        for sym, w in weights.items():
+            h = bars.history(sym, lookback=self.vol_window + 1)
+            if len(h) < 20:
+                continue
+            c = h["close"].to_numpy(dtype=float)
+            series.append((w, np.diff(c) / c[:-1]))
+        if not series:
+            return 1.0
+        n = min(len(r) for _, r in series)
+        if n < 20:
+            return 1.0
+        port = np.zeros(n)
+        for w, r in series:
+            port += w * r[-n:]
+        vol = float(np.std(port)) * np.sqrt(252)
+        if vol <= 0:
+            return 1.0
+        return float(np.clip(self.vol_target / vol, self.min_vol_scale, 1.0))
 
     def _weights(self, book: list[str], bars: BarView,
                  score_of: dict[str, float] | None = None) -> dict[str, float]:

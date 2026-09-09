@@ -450,6 +450,47 @@ The whole project had been validated on 2015-2026. That decade contains COVID �
 
 **Caveat that cuts against the result being even this good:** 411 pre-2011 symbols were dropped for unmappable ISIN — 8.6% of pre-2011 turnover — so the historical universe tilts toward survivors. Reality was probably worse.
 
+### CORRECTION — the 2005-2014 results above were measured with a cold lookback
+
+The historical run and the regime-liquidation run both omitted the warmup tail that `WalkForward` applies, so the strategy began every test window with a cold 126-day lookback and could not rank anything for months. The bug was found in `validate_deep_band.py` and **not propagated** to `validate_historical.py` at the time. Corrected numbers:
+
+| Arm | reported | corrected |
+|---|---|---|
+| strategy final | ₹348,110 | **₹803,205** |
+| strategy CAGR | −5.0% | **+7.0%** |
+| strategy Sharpe | −0.12 | **+0.42** |
+| strategy max DD | −68.9% | −59.6% |
+| strategy, 2008-01..2009-03 | −66.0% | −53.7% |
+| + regime filter, max DD | −68.8% | **−39.2%** |
+| + regime filter, 2008 | −65.5% | **−36.7%** |
+| + regime liquidation, max DD | −20.1% | −14.2% |
+| benchmark | ₹709,202, +5.1%, −65.8% | ₹708,099, +5.1%, −65.8% |
+
+**Three stated conclusions were wrong and are withdrawn:**
+
+1. *"The frozen configuration does not survive 2008"* and *"nothing beat buy-and-hold"* — it did beat its benchmark, ₹803,205 against ₹708,099, Sharpe +0.42 against +0.32.
+2. *"It falls further than buy-and-hold in the crash"* — it fell −53.7% against −58.4%. It protected, mildly.
+3. *"The regime filter is an entry gate wearing a crash defence's justification"* — with the lookback warm it cuts drawdown by 20 points and the crash loss by 17. The mechanism described (it empties the buy list, it does not sell) is still accurate; the conclusion that this makes it useless was not.
+
+**What survives the correction:** the drawdown is far worse than the decade the strategy was designed on (−59.6% against −26.1%), risk-off liquidation cuts it hardest (−14.2%) at a real cost in return, and the edge over the benchmark is modest at +1.9pp CAGR.
+
+**The lesson is about the harness, not the strategy.** This is the fourth time a simulation detail has reversed a finding here, and the third time a control arm or a failed reproduction was the only thing that caught it. A conclusion from this project should not be trusted until the same configuration has been reproduced by a second code path.
+
+### Volatility targeting — an explicit risk target, from Carver Table 25
+
+Portfolio volatility was previously an accident of holding 15 inverse-vol-weighted names: 14.1% annualised over 2015-2026, never chosen. Carver's Table 25 puts the right target at 10% for a realistic 0.40 Sharpe with negative skew (ours is −0.49, with excess kurtosis +4.2). Target pre-registered at 10% from that table, not tuned here. It can only de-risk: Indian cash equity delivery cannot be levered, so the multiplier is capped at 1.0.
+
+| Period | Arm | Final | CAGR | Vol | Sharpe | Max DD |
+|---|---|---|---|---|---|---|
+| 2015-2026 | no target | ₹2,152,835 | +17.6% | 14.1% | +1.22 | −26.3% |
+| 2015-2026 | target 10% | ₹1,405,841 | +12.2% | 11.6% | +1.05 | −26.6% |
+| 2005-2014 | no target | ₹892,708 | +8.6% | 21.8% | +0.49 | −59.2% |
+| 2005-2014 | target 10% | ₹713,672 | +5.2% | 13.2% | +0.45 | −34.9% |
+
+**It does what risk targeting is supposed to do, and nothing more.** In the calm decade it costs 5.4pp of return, cuts volatility by 2.5 points, and does not improve the drawdown at all. In the turbulent decade it cuts volatility from 21.8% to 13.2% and the drawdown from −59.2% to **−34.9%** — 24 points — for 3.4pp of return, with Sharpe essentially unchanged (+0.49 to +0.45).
+
+That asymmetry is the point: it is insurance, priced in foregone return, that pays out only in the regime the strategy has never traded live. Whether the premium is worth paying is a risk-appetite decision rather than a return-optimisation one, which is exactly how Carver frames it. **It is not enabled on any running account.**
+
 ### Phase 5 — Dashboard *(your requirement #4a)*
 React UI: tradability explorer, run browser, equity-curve overlay for N runs, side-by-side metrics table, trade-level drill-down, parameter-sensitivity heatmaps.
 

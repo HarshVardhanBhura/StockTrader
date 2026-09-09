@@ -42,7 +42,7 @@ THREE DELIBERATE DEPARTURES, EACH FORCED BY THE ERA
 from __future__ import annotations
 
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -119,8 +119,16 @@ def run(strategy_name: str):
         budget = cost_budget_for(w.test_start)
         pf.tax_model = tax
         tradable = sorted(set(syms) | set(pf.positions))
+        # WARMUP TAIL. Without it the 126-day lookback plus 21-day skip is
+        # cold on day one of every window and the strategy cannot rank
+        # anything for months. This was found in validate_deep_band.py and
+        # NOT propagated here at the time, so the first version of this run
+        # reported -5.0% CAGR and a -68.9% drawdown for a configuration that
+        # actually returns +8.6% and -59.2% over the same decade. The
+        # conclusion changed; the correction is in the commit history.
+        warm_from = w.test_start - timedelta(days=400)
         d = bars[(bars["symbol"].isin(tradable))
-                 & (bars["date"] >= pd.Timestamp(w.test_start))
+                 & (bars["date"] >= pd.Timestamp(warm_from))
                  & (bars["date"] <= pd.Timestamp(w.test_end))]
         if d.empty:
             continue
