@@ -76,7 +76,7 @@
   },
   "pending": [],
   "strategy_state": {
-    "day_count": 9,
+    "day_count": 10,
     "high_water": {}
   },
   "equity_history": [
@@ -131,6 +131,12 @@
     {
       "date": "2026-09-09",
       "equity": 490061.73,
+      "cash": 42359.93,
+      "n_positions": 14
+    },
+    {
+      "date": "2026-09-10",
+      "equity": 489224.28,
       "cash": 42359.93,
       "n_positions": 14
     }
@@ -566,5 +572,5 @@
       "why": "rounds to 0 shares at Rs 33,330.00"
     }
   ],
-  "last_run": "2026-09-09"
+  "last_run": "2026-09-10"
 }

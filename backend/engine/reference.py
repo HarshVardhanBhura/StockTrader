@@ -75,20 +75,37 @@ class ReferenceResult:
 def reference_walk_forward(
     bars: pd.DataFrame,
     windows: list[Window],
-    strategy_factory: Callable[[], Strategy],
     cost_model: CostModel,
     initial_capital: float,
+    strategy_factory: Callable[[], Strategy] | None = None,
+    strategy_factory_for: Callable[[pd.DataFrame], Strategy] | None = None,
     universe_selector: Callable[[pd.DataFrame], list[str]] | None = None,
     tax_model: IndiaEquityTax | None = None,
     slippage_pct: float = 0.001,
     warmup_days: int = 260,
+    cost_model_for: Callable[[date], CostModel] | None = None,
+    tax_model_for: Callable[[date], IndiaEquityTax] | None = None,
+    max_cost_pct_for: Callable[[date], float] | None = None,
 ) -> ReferenceResult:
     """Roll through ``windows``, chaining one portfolio and its capital.
 
     ``strategy_factory`` takes no arguments: this path does not search a grid,
     so there are no parameters to pass. A caller comparing against
     ``WalkForward`` should give that a single-point grid.
+
+    The three ``*_for`` callables exist for historical runs, where costs and
+    taxes changed under the strategy's feet: a round trip cost 1.48% before
+    discount broking existed against 0.25% today, and LTCG was exempt entirely
+    from 2004 to 2018. When given, each window is charged the regime in force
+    at its start. ``max_cost_pct_for`` matters because the engine's default
+    0.5% position-cost budget is unsatisfiable in an era whose proportional
+    floor alone is 1.45%, and the two code paths disagreed about what to do
+    with an impossible constraint - a strategy traded freely while its
+    benchmark bought nothing.
     """
+    if (strategy_factory is None) == (strategy_factory_for is None):
+        raise ValueError("give exactly one of strategy_factory or "
+                         "strategy_factory_for")
     tax = tax_model or IndiaEquityTax()
     portfolio = Portfolio(cash=initial_capital, tax_model=tax)   # D
     capital = initial_capital                                    # E
@@ -118,10 +135,22 @@ def reference_walk_forward(
         if data.empty:
             continue
 
+        costs = cost_model_for(w.test_start) if cost_model_for else cost_model
+        window_tax = tax_model_for(w.test_start) if tax_model_for else tax
+        portfolio.tax_model = window_tax
+        engine_kw = {}
+        if max_cost_pct_for is not None:
+            engine_kw["max_cost_pct"] = max_cost_pct_for(w.test_start)
+
+        # A strategy that depends on the window - a market model fitted to
+        # the training slice, say - is built here rather than passed in, so
+        # the reference sees exactly what the original run saw.
+        strategy = (strategy_factory_for(train) if strategy_factory_for
+                    else strategy_factory())
         result = BacktestEngine(
-            data, cost_model, BacktestBroker(cost_model, slippage_pct=slippage_pct),
-            initial_capital=capital, tax_model=tax,
-        ).run(strategy_factory(), w.test_start, w.test_end, portfolio=portfolio)
+            data, costs, BacktestBroker(costs, slippage_pct=slippage_pct),
+            initial_capital=capital, tax_model=window_tax, **engine_kw,
+        ).run(strategy, w.test_start, w.test_end, portfolio=portfolio)
 
         curve = result.equity_curve
         if curve.empty:
