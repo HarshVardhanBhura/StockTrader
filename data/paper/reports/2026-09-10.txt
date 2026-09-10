@@ -1,0 +1,79 @@
+==============================================================================
+PAPER ACCOUNTS — week ending 2026-09-10
+==============================================================================
+
+  account           sess       equity   return  vs ctrl   maxDD  pos
+  band_residual        8 Rs   498,200   -0.36%   +1.07%   -2.9%   15
+  top60_residual       8 Rs   494,902   -1.02%   +1.75%   -1.6%   14
+  band_hold            8 Rs   492,828   -1.43%      —   -2.1%   37
+  band_patient         8 Rs   492,580   -1.48%   -0.05%   -2.9%   15
+  top60_patient        8 Rs   490,062   -1.99%   +0.78%   -2.5%   14
+  top60_hold           8 Rs   486,171   -2.77%      —   -2.8%   33
+
+==============================================================================
+STOP CONDITIONS AND BEHAVIOUR CHECKS
+==============================================================================
+
+  top60_patient   [ok]
+       staleness          last run 2026-09-09, 1 weekday(s) ago
+       drawdown           -2.5% against a -40% limit
+       excess vs control  +0.78% over 8 sessions (too short to annualise meaningfully)
+       costs              0.119% of notional against 0.123% modelled (0.97x)
+       turnover           13.07 round trips/slot/year on 9 sessions (a quarterly rebalance needs longer to measure)
+       intent             14 positions, 0 pending
+
+  band_residual   [ok]
+       staleness          last run 2026-09-09, 1 weekday(s) ago
+       drawdown           -2.9% against a -40% limit
+       excess vs control  +1.07% over 8 sessions (too short to annualise meaningfully)
+       costs              0.119% of notional against 0.123% modelled (0.97x)
+       turnover           14.00 round trips/slot/year on 9 sessions (a quarterly rebalance needs longer to measure)
+       intent             15 positions, 0 pending
+
+  top60_residual   [ok]
+       staleness          last run 2026-09-09, 1 weekday(s) ago
+       drawdown           -1.6% against a -40% limit
+       excess vs control  +1.75% over 8 sessions (too short to annualise meaningfully)
+       costs              0.119% of notional against 0.123% modelled (0.97x)
+       turnover           13.07 round trips/slot/year on 9 sessions (a quarterly rebalance needs longer to measure)
+       intent             14 positions, 0 pending
+
+  band_patient   [ok]
+       staleness          last run 2026-09-09, 1 weekday(s) ago
+       drawdown           -2.9% against a -40% limit
+       excess vs control  -0.05% over 8 sessions (too short to annualise meaningfully)
+       costs              0.119% of notional against 0.123% modelled (0.97x)
+       turnover           14.00 round trips/slot/year on 9 sessions (a quarterly rebalance needs longer to measure)
+       intent             15 positions, 0 pending
+
+  top60_hold   [ok]
+       staleness          last run 2026-09-09, 1 weekday(s) ago
+       drawdown           -2.8% against a -40% limit
+       costs              0.119% of notional against 0.123% modelled (0.97x)
+       turnover           7.70 round trips/slot/year on 9 sessions (a quarterly rebalance needs longer to measure)
+       intent             33 positions, 0 pending
+
+  band_hold   [ok]
+       staleness          last run 2026-09-09, 1 weekday(s) ago
+       drawdown           -2.1% against a -40% limit
+       costs              0.119% of notional against 0.123% modelled (0.97x)
+       turnover           8.63 round trips/slot/year on 9 sessions (a quarterly rebalance needs longer to measure)
+       intent             37 positions, 0 pending
+
+==============================================================================
+TRADES IN THE LAST 7 SESSIONS
+==============================================================================
+
+  None. A quarterly rebalance is supposed to be quiet;
+  silence here is the system working, not the system stopped.
+  The staleness check above is what proves it is still running.
+
+==============================================================================
+VERDICT
+==============================================================================
+  No stop condition triggered. Nothing is broken.
+
+  This is NOT evidence that any strategy is working. Distinguishing
+  these accounts from their controls needs 12-15 years (Carver Table 6
+  at our measured 0.695 correlation). The first return judgement is
+  due 2027-09; the six-month mechanics review is due 2027-03.
