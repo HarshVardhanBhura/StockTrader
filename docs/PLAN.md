@@ -491,6 +491,28 @@ Portfolio volatility was previously an accident of holding 15 inverse-vol-weight
 
 That asymmetry is the point: it is insurance, priced in foregone return, that pays out only in the regime the strategy has never traded live. Whether the premium is worth paying is a risk-appetite decision rather than a return-optimisation one, which is exactly how Carver frames it. **It is not enabled on any running account.**
 
+### A learned ranker (gradient-boosted trees) — loses to the one hand-chosen number
+
+Built because a model can weigh many signals at once and, retrained each window, can change HOW it decides rather than only what it picks. `MLMomentum` subclasses `ResidualMomentum` and overrides **only** `_rank`, so sizing, exits, the rank buffer, weighting, the rebalance clock, costs and taxes are the same code. The universe, windows and capital are identical. Hyperparameters fixed a priori, not tuned: one configuration, one trial.
+
+| | Final | CAGR | Sharpe | Max DD |
+|---|---|---|---|---|
+| ResidualMomentum | ₹2,075,856 | +17.1% | **+1.21** | −28.8% |
+| ML ranker | ₹1,276,336 | +11.0% | +0.80 | −56.1% |
+| buy-and-hold (control) | ₹1,191,017 | +10.1% | +0.60 | −57.5% |
+
+It beats its control by +0.194 Sharpe and loses to the hand-chosen rule by **−0.414**. DSR 0.542 at N=50, failing.
+
+**The diagnostics say why, and they are the useful part.** Out-of-sample information coefficient — rank correlation between prediction and realised forward rank — averages **+0.0184**, positive in 8 of 9 windows, t = +1.21. So the model has weak, genuinely non-zero predictive power. It is simply far too noisy to trade: an IC that small, at quarterly turnover, is buried by 0.42% round-trip costs and 20% STCG.
+
+**What it learned is the second half of the answer.** By split count the model leans hardest on `turnover_rank` (693), `vol_63` (538), `mom_252` (510) and `skew_63` (410). Momentum features are present but not dominant — the model mostly rediscovered **liquidity and volatility**, which are characteristics the universe construction already fixes by trading a defined turnover band.
+
+The drawdown confirms it: −56.1% against the control's −57.5% and ResidualMomentum's −28.8%. The learned book carries market-like risk without market-beating return, because ranking on generic characteristics produces a portfolio that looks like the market. `ResidualMomentum`'s single number wins precisely because it is *not* generic — stripping market beta isolates idiosyncratic trend, which is the thing worth concentrating in.
+
+**Seventh refinement, seventh null.** Conviction weighting, wider exits, absolute-only exits, tax-aware exits, the regime filter as an entry gate, the deep band, and now a learned ranker. The pattern is consistent enough to be a finding in itself: on twelve price-derived features over eleven years, added model capacity does not buy anything.
+
+Published context: best-in-class monthly out-of-sample R² for cross-sectional equity ML is 0.3–0.4%, from far richer data than price-derived features. This result is not anomalous.
+
 ### Phase 5 — Dashboard *(your requirement #4a)*
 React UI: tradability explorer, run browser, equity-curve overlay for N runs, side-by-side metrics table, trade-level drill-down, parameter-sensitivity heatmaps.
 
