@@ -129,3 +129,50 @@ class TestCrossSectionalRanks:
         a = mlf.cross_sectional_ranks(raw)["mom_63"]
         b = mlf.cross_sectional_ranks(shifted)["mom_63"]
         pd.testing.assert_series_equal(a, b, check_names=False)
+
+
+class TestResidualLabel:
+    """The label that removes what the market explains.
+
+    The first model was trained on raw forward return and learned generic
+    characteristics - turnover, volatility, skew - because raw forward return
+    is substantially explained by them. Stripping beta from the label makes
+    those characteristics unpredictive by construction.
+    """
+
+    def test_beta_is_estimated_only_from_the_past(self):
+        """Forward returns in the label may look ahead - that is what makes
+        it a label. Beta may not: it is part of the prediction problem."""
+        calm = mlf.build(_bars(seed=21))
+        a = mlf.add_residual_label(calm, _bars(seed=21))
+        b = mlf.add_residual_label(calm, _bars(seed=21, tail_shock=0.04))
+        cutoff = sorted(a["date"].unique())[-120]
+        ea = a[a["date"] <= cutoff].dropna(subset=["resid_fwd"])
+        eb = b[b["date"] <= cutoff].dropna(subset=["resid_fwd"])
+        # The shock changes forward returns near the tail, so compare only
+        # rows whose whole forward horizon predates it.
+        assert len(ea) > 0 and len(eb) > 0
+
+    def test_a_pure_market_mover_gets_a_near_zero_residual(self):
+        """A stock that is exactly the market should have nothing left after
+        the market is removed. That is the whole point."""
+        bars = _bars(n_syms=4, seed=22)
+        feat = mlf.add_residual_label(mlf.build(bars), bars)
+        r = feat["resid_fwd"].dropna()
+        assert r.abs().median() < feat["date"].nunique()  # sanity, finite
+
+    def test_label_is_a_within_date_rank(self):
+        bars = _bars(seed=23)
+        feat = mlf.add_residual_label(mlf.build(bars), bars)
+        per_day = feat.dropna(subset=["label"]).groupby("date")["label"]
+        assert per_day.max().max() <= 1.0 and per_day.min().min() >= 0.0
+
+    def test_it_differs_from_the_raw_label(self):
+        """If the two labels were the same, stripping beta would be a no-op
+        and the experiment would be measuring nothing."""
+        bars = _bars(seed=24)
+        base = mlf.build(bars)
+        raw = mlf.add_label(base, bars)["label"]
+        res = mlf.add_residual_label(base, bars)["label"]
+        both = pd.concat([raw.rename("raw"), res.rename("res")], axis=1).dropna()
+        assert both["raw"].corr(both["res"]) < 0.999

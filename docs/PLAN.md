@@ -513,6 +513,30 @@ The drawdown confirms it: −56.1% against the control's −57.5% and ResidualMo
 
 Published context: best-in-class monthly out-of-sample R² for cross-sectional equity ML is 0.3–0.4%, from far richer data than price-derived features. This result is not anomalous.
 
+### The residual label — predictive power triples, and cannot be harvested
+
+The first model was diagnosed as learning generic characteristics because its target rewarded them: raw forward return is substantially explained by beta, volatility and liquidity. So the label was changed to **residual forward return** — `fwd_stock − beta × fwd_market`, with beta estimated on a trailing window. One change, one trial.
+
+The diagnosis was correct and the fix worked, in the direction predicted:
+
+| Label | Sharpe | Max DD | Out-of-sample IC | t-stat |
+|---|---|---|---|---|
+| raw forward return | +0.80 | −56.1% | +0.0184 | +1.21 |
+| **residual forward return** | +0.84 | −49.9% | **+0.0590** | **+3.94** |
+| *ResidualMomentum (the rule it must beat)* | *+1.21* | *−28.8%* | — | — |
+
+**Predictive power tripled and became statistically significant.** An IC of +0.059 at t = +3.94 is a respectable factor IC — this model genuinely forecasts cross-sectional residual returns.
+
+**And the portfolio barely moved: +0.80 to +0.84 Sharpe.** That gap is the result worth keeping.
+
+**Why: a long-only cash-equity book earns RAW returns, not residual ones.** Harvesting residual return requires shorting the market against each position, and Indian cash equity cannot hold overnight shorts (noted in this plan's opening constraints). The model is predicting a quantity the portfolio structurally cannot collect. A stock can have excellent residual performance and still lose money, and the account holds the stock.
+
+Feature importances are identical across both runs — 31% momentum, 60% generic — confirming this is not a modelling artifact. The model used the same inputs; only the target changed.
+
+**What this settles.** The binding constraint is not the model, the hyperparameters, or the label. It is that the *harvestable* signal in price-derived features is small, while the part that is strongly predictable is unavailable to a long-only account. `ResidualMomentum` beats the model not by predicting better but by using residual momentum as a SELECTION signal while still earning raw returns — the correlation between the two is what it monetises.
+
+Eighth refinement, eighth null. Running the model on more data or with more capacity would raise IC further and change nothing about harvestability.
+
 ### Phase 5 — Dashboard *(your requirement #4a)*
 React UI: tradability explorer, run browser, equity-curve overlay for N runs, side-by-side metrics table, trade-level drill-down, parameter-sensitivity heatmaps.
 

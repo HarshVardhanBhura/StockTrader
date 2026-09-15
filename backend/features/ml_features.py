@@ -110,6 +110,52 @@ def add_label(feat: pd.DataFrame, bars: pd.DataFrame,
     return out
 
 
+def add_residual_label(feat: pd.DataFrame, bars: pd.DataFrame,
+                       horizon: int = LABEL_HORIZON,
+                       beta_window: int = 252) -> pd.DataFrame:
+    """Forward return with the market's contribution removed, as a rank.
+
+    WHY THIS EXISTS. The first version of this model was trained on RAW
+    forward return, and the diagnostics said exactly what went wrong: by split
+    count it leaned hardest on turnover_rank, vol_63 and skew_63 - generic
+    characteristics - and produced a book with a -56.1% drawdown against the
+    market's -57.5%. It learned what its target rewarded, and raw forward
+    return is substantially explained by beta, volatility and liquidity.
+
+    Meanwhile the hand-written rule it lost to wins precisely by stripping
+    market beta first. So: strip it from the LABEL, and generic
+    characteristics stop being predictive by construction. The model must find
+    idiosyncratic signal or find nothing.
+
+        residual_fwd = fwd_stock - beta * fwd_market
+
+    Beta is estimated on a trailing window, so it is knowable at the
+    prediction date; only the forward returns look ahead, which is what makes
+    them a label. The purge in training is what keeps that from leaking.
+    """
+    close = _panel(bars, "close")
+    ret = close.pct_change()
+    # Equal-weight market, matching MarketModel: averaging cross-sectional
+    # returns rather than index levels, so a listing or delisting cannot
+    # rebase the series.
+    mkt = ret.mean(axis=1, skipna=True).fillna(0.0)
+
+    var = mkt.rolling(beta_window, min_periods=beta_window // 2).var()
+    cov = ret.rolling(beta_window, min_periods=beta_window // 2).cov(mkt)
+    beta = cov.div(var.replace(0, np.nan), axis=0)
+
+    fwd = close.shift(-horizon) / close - 1.0
+    cum = (1.0 + mkt).cumprod()
+    fwd_mkt = cum.shift(-horizon) / cum - 1.0
+    resid = fwd.sub(beta.mul(fwd_mkt, axis=0))
+
+    lab = resid.stack(future_stack=True).rename("resid_fwd").reset_index()
+    lab.columns = ["date", "symbol", "resid_fwd"]
+    out = feat.merge(lab, on=["date", "symbol"], how="left")
+    out["label"] = out.groupby("date")["resid_fwd"].rank(pct=True)
+    return out
+
+
 def cross_sectional_ranks(feat: pd.DataFrame,
                           columns: list[str] | None = None) -> pd.DataFrame:
     """Replace each feature with its percentile rank within its own date.

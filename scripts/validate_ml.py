@@ -77,7 +77,11 @@ print(f"{len(bars):,} bars · {bars['symbol'].nunique()} equities · "
 
 t0 = time.perf_counter()
 feat = mlf.cross_sectional_ranks(mlf.build(bars))
-feat = mlf.add_label(feat, bars)
+LABEL = sys.argv[1] if len(sys.argv) > 1 else "residual"
+feat = (mlf.add_residual_label(feat, bars) if LABEL == "residual"
+        else mlf.add_label(feat, bars))
+print(f"label: {LABEL} forward {mlf.LABEL_HORIZON}-session return, "
+      f"cross-sectionally ranked")
 print(f"features built in {time.perf_counter() - t0:.0f}s: "
       f"{len(feat):,} rows, {len(mlf.FEATURES)} columns\n")
 
